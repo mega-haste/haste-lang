@@ -1,8 +1,5 @@
 # haste-lang
 
-## Note
-I'll continue on this project after I complete reading `grokking algorithms`, `Clean code` and `crafting interpreter`.
-
 # How to try haste?
 1. you got to install the repo first and navigate to where you clone the repo
 ```sh
