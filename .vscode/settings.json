@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "initializer_list": "cpp",
+        "format": "cpp",
+        "string": "cpp",
+        "optional": "cpp"
+    }
+}
