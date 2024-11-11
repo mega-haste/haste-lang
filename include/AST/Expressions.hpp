@@ -12,7 +12,7 @@ namespace AST {
 
 class ExpressionNode {
 public:
-  virtual std::string prettify(void) const = 0;
+  virtual const std::string prettify(void) const = 0;
 };
 
 using Expression = std::unique_ptr<ExpressionNode>;
@@ -23,7 +23,7 @@ public:
 
   explicit LiteralExpression(const Token &v) : value(v) {}
 
-  std::string prettify(void) const override {
+  const std::string prettify(void) const override {
     switch (value.type) {
     case TokenType::CharLit:
       return std::format("(char \'{}\')", value.value);
@@ -45,7 +45,7 @@ public:
 
   explicit BooleanExpression(bool v) : value(v) {}
 
-  std::string prettify(void) const override {
+  const std::string prettify(void) const override {
     return value ? "(bool true)" : "(bool false)";
   }
 };
@@ -58,7 +58,7 @@ public:
   explicit UnaryExpression(const Token &op, Expression&& rhs)
       : op(op), rhs(std::move(rhs)) {}
 
-  std::string prettify(void) const override {
+  const std::string prettify(void) const override {
     return std::format("(unary {} {})", op.value, rhs->prettify());
   }
 };
@@ -72,7 +72,7 @@ public:
   explicit BinaryExpression(Expression&& lhs, const Token &op, Expression&& rhs)
       : lhs(std::move(lhs)), op(op), rhs(std::move(rhs)) {}
 
-  std::string prettify(void) const override {
+  const std::string prettify(void) const override {
     return std::format("(binary {} {} {})", lhs->prettify(), op.value,
                        rhs->prettify());
   }
@@ -84,7 +84,7 @@ public:
 
   explicit GroupingExpression(Expression&& expr) : expr(std::move(expr)) {}
 
-  std::string prettify(void) const override {
+  const std::string prettify(void) const override {
     return std::format("(grouping {})", expr->prettify());
   }
 };
@@ -100,7 +100,7 @@ public:
       : condition(std::move(condition)), consequent(std::move(consequent)),
         alternate(std::move(alternate)) {}
 
-  std::string prettify(void) const override {
+  const std::string prettify(void) const override {
     return std::format("(if {} then {} else {})", condition->prettify(),
                        consequent->prettify(), alternate->prettify());
   }
@@ -113,7 +113,7 @@ public:
 
   explicit AsExpression(Expression&& expr, Type &&type): expr(std::move(expr)), type(std::move(type)) {}
 
-  std::string prettify(void) const override {
+  const std::string prettify(void) const override {
     return std::format("(as {} {})", expr->prettify(), type->prettify());
   }
 };
@@ -124,7 +124,7 @@ public:
 
   explicit IdentifierExpression(const Token &v) : value(v) {}
 
-  std::string prettify(void) const override {
+  const std::string prettify(void) const override {
     switch (value.type) {
     case TokenType::Identifier:
       return std::format("(ident {})", value.value);
@@ -133,6 +133,40 @@ public:
     default:
       std::exit(70);
     }
+  }
+};
+
+class CallExpression : public ExpressionNode {
+public:
+  Expression callee;
+  const Token &paren;
+  std::vector<Expression> arguments;
+
+  explicit CallExpression(Expression &&callee, const Token &paren, std::vector<Expression> arguments)
+    : callee(std::move(callee)), paren(paren), arguments(std::move(arguments)) {}
+
+  const std::string prettify(void) const override {
+    std::string arg_str;
+    for (auto &argument : arguments) {
+      arg_str.append(argument->prettify());
+      arg_str.append(", ");
+    }
+
+    return std::format("(call {}({}))", callee->prettify(), arg_str);
+  }
+};
+
+class MemberAccessExpression : public ExpressionNode {
+public:
+  Expression group;
+  const Token &dot;
+  const Token &member;
+
+  explicit MemberAccessExpression(Expression &&group, const Token &dot, const Token &member)
+    : group(std::move(group)), dot(dot), member(std::move(member)) {}
+
+  const std::string prettify(void) const override {
+    return std::format("(access {} {})", group->prettify(), member.value);
   }
 };
 

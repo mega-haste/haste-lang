@@ -47,6 +47,8 @@ private:
   Expression as(void);
   Expression $or(void);
   Expression $and(void);
+  Expression bitwise_and(void);
+  Expression bitwise_or(void);
   Expression equality(void);
   Expression relational(void);
   Expression bitwise_shift(void);
@@ -55,6 +57,8 @@ private:
   Expression power(void);
   Expression nuts(void); // 🥜
   Expression unary(void);
+  Expression call(void);
+  Expression finish_call(Expression &&callee);
   Expression primary(void);
 
   const bool match(std::initializer_list<TokenType> types);
@@ -62,6 +66,7 @@ private:
   const bool is_at_end(void) const;
 
   const Token &consume_semi_colon(void);
+  const Token &consume_identifier(const char *message);
 
   const Token &consume(TokenType type, const char *message);
   const Token &peek(void) const;

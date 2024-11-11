@@ -50,6 +50,7 @@ void Scanner::setup_keywords() {
   AK("int", Int);
   AK("float", Float);
   AK("void", Void);
+  AK("bool", Bool);
 }
 
 TokenList Scanner::scan() {

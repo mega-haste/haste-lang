@@ -16,5 +16,25 @@ $ make
 $ ./haste-test
 ```
 
+# Language progress
+- [x] Scanner
+- [ ] Parser
+    - [ ] Expressions
+        - [x] Math (+, -, *, **, /, %)
+        - [x] Comparition (==, !=, <, >, >=, =<)
+        - [x] Logical (not, and, or)
+        - [x] Bitewise (&, |, ~, <<, >>)
+        - [x] inline if (if .. then .. else ..)
+        - [x] as (type casting `expr as Type`)
+        - [x] call expression
+        - [x] member access
+        - [ ] Subscript (`expr[v]`)
+        - [ ] Scope resolusion
+    - [ ] Types
+        - [x] Built-in types (**int**, **uint**, **float**, **string**, **void**, **bool**)
+        - [x] Slices (`T[int]`, `T[]`)
+        - [ ] Tuple (`(T, R, Y, X, ...)`)
+        - [ ] Generics aka. templates in c++ (`T<Args>`)
+
 # Credits
 Thanks to [Amir](https://github.com/Ameeer1) for leting me to steal the idea of `tags`

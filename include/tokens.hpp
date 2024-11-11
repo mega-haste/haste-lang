@@ -75,6 +75,7 @@ enum class TokenType {
   UInt,
   Int,
   Float,
+  Bool,
   Void,
 
   //// Control flows
