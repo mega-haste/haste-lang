@@ -8,7 +8,7 @@ $ cd haste-lang
 ```
 2. You should be already installed cmake and run this command
 ```sh
-$ cmake -S . -G "Unix Makefiles" -B cmake
+$ cmake -S . -G "Unix Makefiles" -B build
 ```
 3. Finally you can run haste (as a test)
 ```sh
