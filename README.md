@@ -37,5 +37,5 @@ $ ./haste-test
         - [ ] Tuple (`(T, R, Y, X, ...)`)
         - [ ] Generics aka. templates in c++ (`T<Args>`)
 
-# Credits
-Thanks to [Amir](https://github.com/Ameeer1) for leting me to steal the idea of `tags`
+# Something
+I dropped the idea of tags, sorry [Amir](https://github.com/Ameeer1)
