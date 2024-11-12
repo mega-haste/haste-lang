@@ -9,7 +9,8 @@ set(MAIN_FILE ./main.cpp)
 file(GLOB_RECURSE CPP_SRC_FILES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 file(GLOB_RECURSE C_SRC_FILES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
 
-set(CC /usr/lib/tcc)
+# set(CC /usr/lib/tcc)
+set(CMAKE_BUILD_PARALLEL_LEVEL 4)
 
 # Dependencies
 include(FetchContent)

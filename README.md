@@ -20,6 +20,7 @@ $ ./haste-test
 - [x] Scanner
 - [ ] Parser
     - [ ] Expressions
+        - [x] Primaries
         - [x] Math (+, -, *, **, /, %)
         - [x] Comparition (==, !=, <, >, >=, =<)
         - [x] Logical (not, and, or)
@@ -31,11 +32,16 @@ $ ./haste-test
         - [x] Subscript (`expr[v]`)
         - [x] Scope resolusion
         - [x] Tuple
+        - [x] assignment
     - [ ] Types
         - [x] Built-in types (**int**, **uint**, **float**, **string**, **void**, **bool**)
         - [x] Slices (`T[int]`, `T[]`)
         - [ ] Tuple (`(T, R, Y, X, ...)`)
         - [ ] Generics aka. templates in c++ (`T<Args>`)
+    - [ ] Statements
+        - [x] if
+        - [x] let
+        - [ ] functions (needs to add generecs to it)
 
 # Something
 I dropped the idea of tags, sorry [Amir](https://github.com/Ameeer1)

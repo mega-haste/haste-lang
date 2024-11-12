@@ -33,9 +33,12 @@ class Parser {
 
     Statement declaration(void);
     Statement statement(void);
+
     Statement function(void);
+    Statement let(void);
 
     std::vector<Statement> block(void);
+    Statement if_condition(void);
 
     TypedIdentifier parse_typed_ident(void);
     Type parse_type(void);
@@ -69,7 +72,7 @@ class Parser {
     const bool check(TokenType type) const;
     const bool is_at_end(void) const;
 
-    const Token &consume_semi_colon(void);
+    const Token &consume_semi_colon(const char *message);
     const Token &consume_identifier(const char *message);
 
     const Token &consume(TokenType type, const char *message);

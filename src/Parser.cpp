@@ -45,8 +45,8 @@ const Token &Parser::consume(TokenType type, const char *message) {
 
 const bool Parser::is_at_end(void) const { return peek() == TokenType::_EOF; }
 
-const Token &Parser::consume_semi_colon(void) {
-  return consume(TokenType::SemiColon, "Expected ';' after end of a statment.");
+const Token &Parser::consume_semi_colon(const char *message) {
+  return consume(TokenType::SemiColon, message);
 }
 
 const Token &Parser::consume_identifier(const char *message) {

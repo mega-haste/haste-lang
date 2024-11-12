@@ -239,4 +239,19 @@ namespace AST {
         }
     };
 
+    class AssignExpression : public ExpressionNode {
+      public:
+        Expression lhs;
+        const Token &eq;
+        Expression value;
+
+        explicit AssignExpression(Expression &&lhs, const Token &eq, Expression &&value)
+            : lhs(std::move(lhs)), eq(eq), value(std::move(value)) {
+        }
+
+        const std::string prettify(void) const override {
+            return std::format("(assign {} {} {})", lhs->prettify(), eq.value, value->prettify());
+        }
+    };
+
 } // namespace AST

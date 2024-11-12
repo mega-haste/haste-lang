@@ -7,6 +7,15 @@ Expression Parser::expression(void) {
 
 Expression Parser::assignment(void) {
     auto left = inline_if();
+    while (match({TokenType::Eq, TokenType::PlusEq, TokenType::MinusEq, TokenType::StarEq, TokenType::FSlashEq, TokenType::DoubleStarEq, TokenType::PercentSignEq})) {
+        const Token &eq = previous();
+        auto value = expression();
+        left = std::make_unique<AssignExpression>(
+            std::move(left),
+            eq,
+            std::move(value)
+        );
+    }
     return left;
 }
 

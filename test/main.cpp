@@ -51,6 +51,20 @@ TEST(ScannerTest, ComparaisonOperator) {
   EXPECT_TOKEN(GreaterThanOrEq);
 }
 
+TEST(ScannerTest, AssignmentOperators) {
+  S("= += -= *= **= /= %=");
+
+  EXPECT_EQ(tokens.size(), 8);
+
+  EXPECT_TOKEN(Eq);
+  EXPECT_TOKEN(PlusEq);
+  EXPECT_TOKEN(MinusEq);
+  EXPECT_TOKEN(StarEq);
+  EXPECT_TOKEN(DoubleStarEq);
+  EXPECT_TOKEN(FSlashEq);
+  EXPECT_TOKEN(PercentSignEq);
+}
+
 TEST(ScannerTest, LogicOperator) {
   S("not and or");
 

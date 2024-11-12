@@ -3,6 +3,8 @@
 
 Statement Parser::declaration(void) {
   try {
+    if (match({TokenType::Let}))
+      return let();
     if (match({TokenType::Func}))
       return function();
 

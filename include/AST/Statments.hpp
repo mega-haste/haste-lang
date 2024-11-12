@@ -1,74 +1,120 @@
 #pragma once
 
-#include <vector>
+#include "Expressions.hpp"
+#include "tokens.hpp"
 #include <cstdio>
+#include <format>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace AST {
+    std::string repeat_char(char c, int times);
 
-class StatementNode;
+    class StatementNode;
 
-using Statement = std::unique_ptr<StatementNode>;
+    using Statement = std::unique_ptr<StatementNode>;
 
-class StatementNode {
-public:
-  virtual const std::string prettify(void) const = 0;
-};
+    class StatementNode {
+      public:
+        virtual const std::string prettify(const int depth = 0) const = 0;
+    };
 
-class BlockStatement : public StatementNode {
-public:
-  std::vector<Statement> statements;
+    class BlockStatement : public StatementNode {
+      public:
+        std::vector<Statement> statements;
 
-  explicit BlockStatement(std::vector<Statement> statements) : statements(std::move(statements)) {}
+        explicit BlockStatement(std::vector<Statement> statements) : statements(std::move(statements)) {
+        }
 
-  const std::string prettify() const override {
-    std::string body_str;
-    for (auto &b : statements) {
-      body_str.push_back('\n');
-      body_str.append(b->prettify());
-    }
-    return std::format("(block {}{}\n{})", '{', body_str, '}');
-  }
-};
+        const std::string prettify(const int depth = 0) const override {
+            std::string body_str;
+            for (auto &b : statements) {
+                body_str.push_back('\n');
+                body_str.append(b->prettify(depth+4));
+            }
+            std::string ssssss = repeat_char(' ', depth);
+            return std::format("{}(block {}{}\n{}{})", ssssss, '{', body_str, ssssss, '}');
+        }
+    };
 
-class ExpressionStatement : public StatementNode {
-public:
-  Expression expr;
-  
-  explicit ExpressionStatement(Expression expr) : expr(std::move(expr)) {}
+    class ExpressionStatement : public StatementNode {
+      public:
+        Expression expr;
 
-  const std::string prettify() const override {
-    
-    return std::format("(expr {})", expr->prettify());
-  }
-};
+        explicit ExpressionStatement(Expression expr) : expr(std::move(expr)) {
+        }
 
-class FunctionDef : public StatementNode {
-public:
-  const Token &identifier;
-  std::vector<TypedIdentifier> arguments;
-  Type return_type;
-  std::vector<Statement> body;
+        const std::string prettify(const int depth = 0) const override {
 
-  explicit FunctionDef(const Token &identifier, std::vector<TypedIdentifier> arguments, Type return_type, std::vector<Statement> &&body)
-    : identifier(identifier), arguments(std::move(arguments)), return_type(std::move(return_type)), body(std::move(body)) {}
+            return std::format("{}(expr {})", repeat_char(' ', depth), expr->prettify());
+        }
+    };
 
-  const std::string prettify() const override {
-    std::string args;
-    std::string body_str;
-    for (auto &arg : arguments) {
-      args.append(", ");
-      args.append(arg.prettify());
-    }
+    class FunctionDef : public StatementNode {
+      public:
+        const Token &identifier;
+        std::vector<TypedIdentifier> arguments;
+        Type return_type;
+        std::vector<Statement> body;
 
-    for (auto &b : body) {
-      body_str.push_back('\n');
-      body_str.append(b->prettify());
-    }
+        explicit FunctionDef(const Token &identifier, std::vector<TypedIdentifier> arguments, Type return_type,
+                             std::vector<Statement> &&body)
+            : identifier(identifier), arguments(std::move(arguments)), return_type(std::move(return_type)),
+              body(std::move(body)) {
+        }
 
-    return std::format("(func_dec {}({}) -> {} ({}))", identifier.value, args, return_type->prettify(), body_str);
-  }
-};
+        const std::string prettify(const int depth = 0) const override {
+            std::string args;
+            std::string body_str;
+            for (auto &arg : arguments) {
+                args.append(", ");
+                args.append(arg.prettify());
+            }
+
+            for (auto &b : body) {
+                body_str.append("\n");
+                body_str.append(b->prettify(depth + 4));
+            }
+            body_str.push_back('\n');
+
+            std::string ssss = repeat_char(' ', depth);
+
+            return std::format("{}(func_dec name:{} args:({}) ret_type:{} body:({}{}))", ssss,
+                               identifier.value, args, return_type->prettify(), body_str, ssss);
+        }
+    };
+
+    class LetDef : public StatementNode {
+      public:
+        const Token &ident;
+        std::optional<Expression> value;
+        std::optional<Type> type;
+        bool mut;
+
+        explicit LetDef(const Token &ident, std::optional<Expression> &&value, std::optional<Type> &&type, bool mut)
+            : ident(ident), value(std::move(value)), type(std::move(type)), mut(mut) {
+        }
+
+        const std::string prettify(const int depth = 0) const override {
+            return std::format("{}(let_dec name:{} mut:{} type:{} value:{})", repeat_char(' ', depth), ident.value, mut,
+                               type.has_value() ? type.value()->prettify() : "unset",
+                               value.has_value() ? value.value()->prettify() : "undefined");
+        }
+    };
+
+    class IfDef : public StatementNode {
+      public:
+        Expression condition;
+        Statement then;
+        std::optional<Statement> otherwise;
+
+        explicit IfDef(Expression &&condition, Statement &&then, std::optional<Statement> &&otherwise)
+            : condition(std::move(condition)), then(std::move(then)), otherwise(std::move(otherwise)) {}
+
+        const std::string prettify(const int depth = 0) const override {
+            return std::format("{}(if ({}) {} else {})", repeat_char(' ', depth), condition->prettify(), then->prettify(depth), otherwise.has_value() ? otherwise.value()->prettify(depth) : "NONE");
+        }
+    };
 
 } // namespace AST

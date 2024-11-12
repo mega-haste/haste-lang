@@ -26,6 +26,12 @@ enum class TokenType {
     BSlash, // '\'
 
     Eq,              // '='
+    PlusEq,          // '+='
+    MinusEq,         // '-='
+    StarEq,         // '*='
+    DoubleStarEq,   // '**=' 
+    FSlashEq,        // '+='
+    PercentSignEq,        // '%='
     EqEq,            // '=='
     BangEq,          // '!='
     LessThan,        // '<'
