@@ -74,14 +74,15 @@ TEST(ScannerTest, BitwiseOpertor) {
 }
 
 TEST(ScannerTest, IDK) {
-  S(". ; : ,");
+  S(". ; : , ::");
 
-  EXPECT_EQ(tokens.size(), 5);
+  EXPECT_EQ(tokens.size(), 6);
 
   EXPECT_TOKEN(Dot);
   EXPECT_TOKEN(SemiColon);
   EXPECT_TOKEN(Colon);
   EXPECT_TOKEN(Comma);
+  EXPECT_TOKEN(ColonColon);
 }
 
 TEST(ScannerTest, LitteralInt) {
@@ -174,10 +175,11 @@ TEST(ScannerTest, KeyWords) {
     "int "
     "float "
     "string "
-    "void ");
+    "void "
+    "bool");
 
   // Create the expected token list based on the enum definitions and comments
-  EXPECT_EQ(tokens.size(), 24);
+  EXPECT_EQ(tokens.size(), 25);
 
   // Check that each token matches the expected token type
   EXPECT_TOKEN(Let);
@@ -203,4 +205,5 @@ TEST(ScannerTest, KeyWords) {
   EXPECT_TOKEN(Float);
   EXPECT_TOKEN(String);
   EXPECT_TOKEN(Void);
+  EXPECT_TOKEN(Bool);
 }

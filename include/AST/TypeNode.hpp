@@ -2,7 +2,6 @@
 
 #include "tokens.hpp"
 #include "Expressions.hpp"
-#include "sigma.hpp"
 #include <string>
 #include <memory>
 #include <format>

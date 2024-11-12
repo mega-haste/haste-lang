@@ -104,7 +104,7 @@ TokenList Scanner::scan() {
       add_token(TokenType::Comma);
       break;
     case ':':
-      add_token(TokenType::Colon);
+      add_token(match(':') ? TokenType::ColonColon : TokenType::Colon);
       break;
     case '=':
       add_token(match('=') ? TokenType::EqEq : TokenType::Eq);

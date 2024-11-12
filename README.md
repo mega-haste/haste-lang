@@ -28,8 +28,9 @@ $ ./haste-test
         - [x] as (type casting `expr as Type`)
         - [x] call expression
         - [x] member access
-        - [ ] Subscript (`expr[v]`)
-        - [ ] Scope resolusion
+        - [x] Subscript (`expr[v]`)
+        - [x] Scope resolusion
+        - [x] Tuple
     - [ ] Types
         - [x] Built-in types (**int**, **uint**, **float**, **string**, **void**, **bool**)
         - [x] Slices (`T[int]`, `T[]`)

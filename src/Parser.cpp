@@ -1,7 +1,6 @@
 #include "Parser.hpp"
 #include "AST/Expressions.hpp"
 #include "tokens.hpp"
-#include "AST/sigma.hpp"
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
