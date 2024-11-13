@@ -1,7 +1,7 @@
 #include "Parser.hpp"
 
 
-Statement Parser::function(void) {
+std::unique_ptr<FunctionDef> Parser::function(void) {
   const Token &name = consume(TokenType::Identifier, "Expected function name.");
 
   consume(TokenType::OpenParen, "Expected '(' after function name.");
@@ -21,8 +21,15 @@ Statement Parser::function(void) {
     return_type = parse_type();
   }
 
-  consume(TokenType::OpenCurlyBrase, "Expected '{' as starting of a function body.");
-  auto body = block();
+  Statement body;
+  if (match({TokenType::OpenCurlyBrase})) {
+    // consume(TokenType::OpenCurlyBrase, "Expected '{' as starting of a function body.");
+    body = std::make_unique<BlockStatement>(block());
+  } else if (match({TokenType::Eq})) {
+    body = expression_statement();
+  } else {
+    throw error(peek(), "Expected either '=' or '{'.");
+  }
 
   return std::make_unique<FunctionDef>(
     name, std::move(args),

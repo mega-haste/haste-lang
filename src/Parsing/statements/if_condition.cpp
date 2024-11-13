@@ -10,7 +10,7 @@ Statement Parser::if_condition(void) {
     auto then = declaration();
     std::optional<Statement> otherwise = match({TokenType::Else}) ? std::optional{declaration()} : std::nullopt;
 
-    return std::make_unique<IfDef>(
+    return std::make_unique<IfStatement>(
         std::move(condition),
         std::move(then),
         std::move(otherwise)

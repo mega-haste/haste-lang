@@ -29,7 +29,6 @@ void Scanner::setup_keywords() {
     AK("true", True);
     AK("false", False);
     AK("let", Let);
-    AK("ptr", Ptr);
     AK("mut", Mut);
     AK("func", Func);
     AK("return", Return);

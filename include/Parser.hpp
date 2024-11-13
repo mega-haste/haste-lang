@@ -6,6 +6,7 @@
 #include "tokens.hpp"
 #include <cstddef>
 #include <initializer_list>
+#include "TranslationUnit.hpp"
 
 using namespace AST;
 
@@ -24,7 +25,7 @@ class Parser {
   public:
     Parser(TokenList tokens);
 
-    std::vector<Statement> parse();
+    TranslationUnit parse();
 
   private:
     static inline Token f = Token(TokenType::Void, "void");
@@ -32,13 +33,15 @@ class Parser {
     std::size_t m_current = 0;
 
     Statement declaration(void);
+    void static_declaration(TranslationUnit &tu);
     Statement statement(void);
 
-    Statement function(void);
+    std::unique_ptr<FunctionDef> function(void);
     Statement let(void);
 
     std::vector<Statement> block(void);
     Statement if_condition(void);
+    Statement $return(void);
 
     TypedIdentifier parse_typed_ident(void);
     Type parse_type(void);
@@ -83,6 +86,7 @@ class Parser {
     ParserError error(Token token, const char *message);
 
     void synchronize(void);
+    void static_synchronize(void);
 };
 
 #endif

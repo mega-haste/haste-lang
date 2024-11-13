@@ -1,10 +1,10 @@
 #include "Parser.hpp"
 
 Statement Parser::statement(void) {
-  if (match({TokenType::If}))
-    return if_condition();
-  if (match({TokenType::OpenCurlyBrase}))
-    return std::make_unique<BlockStatement>(std::move(block()));
+  if (match({TokenType::Return})) return $return();
+  if (match({TokenType::If})) return if_condition();
+  if (match({TokenType::OpenCurlyBrase})) return std::make_unique<BlockStatement>(std::move(block()));
+  
   return expression_statement();
 }
 

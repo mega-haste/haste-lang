@@ -69,10 +69,8 @@ enum class TokenType {
     False,
 
     As,
-
     Mut,
     Let,
-    Ptr,
     Func,
     InlineFunc, // !func
     Return,
@@ -93,6 +91,7 @@ enum class TokenType {
     Is,
     For,
     Loop,
+    While,
 
     //// Class related
     Class,
@@ -208,7 +207,6 @@ class Token {
 
             TM(Mut)
             TM(Let)
-            TM(Ptr)
 
             TM(Func)
             TM(Return)

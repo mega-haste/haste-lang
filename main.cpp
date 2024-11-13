@@ -17,9 +17,7 @@ int main(int argc, char *argv[]) {
     Parser parser(tokens);
     auto res = parser.parse();
 
-    for (auto &r : res) {
-        std::cout << r->prettify() << '\n';
-    }
+    res.pretty_print();
 
     return 0;
 }

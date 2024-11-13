@@ -183,7 +183,6 @@ TEST(ScannerTest, KeyWords) {
     "!class "
     "try "
     "catch "
-    "ptr "
     "as "
     "uint "
     "int "
@@ -193,7 +192,7 @@ TEST(ScannerTest, KeyWords) {
     "bool");
 
   // Create the expected token list based on the enum definitions and comments
-  EXPECT_EQ(tokens.size(), 25);
+  EXPECT_EQ(tokens.size(), 24);
 
   // Check that each token matches the expected token type
   EXPECT_TOKEN(Let);
@@ -212,7 +211,6 @@ TEST(ScannerTest, KeyWords) {
   EXPECT_TOKEN(FinalClass); // !class
   EXPECT_TOKEN(Try);
   EXPECT_TOKEN(Catch);
-  EXPECT_TOKEN(Ptr);
   EXPECT_TOKEN(As);
   EXPECT_TOKEN(UInt);
   EXPECT_TOKEN(Int);
