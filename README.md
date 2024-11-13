@@ -73,7 +73,7 @@ $ ./haste-test
 
 # My goals
 - [ ] Better Error messages
-- [ ] Adding a good type-checking & syntactic analysis
+- [ ] Adding a good type-checking & Semantic analysis
 - [ ] Traspiling haste to c (I'm planing on using llvm to compile haste directly to machine code)
 
 # Something
