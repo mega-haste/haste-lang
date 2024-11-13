@@ -33,6 +33,7 @@ $ ./haste-test
         - [x] Scope resolusion
         - [x] Tuple
         - [x] assignment
+        - [ ] referencing and dereferencing (`&expr` and `*expr`)
     - [ ] Types
         - [x] Built-in types (**int**, **uint**, **float**, **string**, **void**, **bool**)
         - [x] Slices (`T[int]`, `T[]`)
