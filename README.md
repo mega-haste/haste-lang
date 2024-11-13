@@ -1,52 +1,61 @@
 # haste-lang
 
-# How to try haste?
+## How to try haste?
+
 1. you got to install the repo first and navigate to where you clone the repo
+
 ```sh
-$ git clone https://github.com/mega-haste/haste-lang
+git clone https://github.com/mega-haste/haste-lang
 $ cd haste-lang
 ```
+
 2. You should be already installed cmake and run this command
+
 ```sh
-$ cmake -S . -G "Unix Makefiles" -B build
-```
-3. Finally you can run haste (as a test)
-```sh
-$ make
-$ ./haste-test
+cmake -S . -G "Unix Makefiles" -B build
 ```
 
-# Language progress
+3. Finally you can run haste (as a test)
+
+```sh
+make
+./haste-test
+```
+
+## Language progress
+
 - [x] Scanner
 - [ ] Parser
-    - [ ] Expressions
-        - [x] Primaries
-        - [x] Math (+, -, *, **, /, %)
-        - [x] Comparition (==, !=, <, >, >=, =<)
-        - [x] Logical (not, and, or)
-        - [x] Bitewise (&, |, ~, <<, >>)
-        - [x] inline if (if .. then .. else ..)
-        - [x] as (type casting `expr as Type`)
-        - [x] call expression
-        - [x] member access
-        - [x] Subscript (`expr[v]`)
-        - [x] Scope resolusion
-        - [x] Tuple
-        - [x] assignment
-        - [ ] referencing and dereferencing (`&expr` and `*expr`)
-    - [ ] Types
-        - [x] Built-in types (**int**, **uint**, **float**, **string**, **void**, **bool**)
-        - [x] Slices (`T[int]`, `T[]`)
-        - [ ] Tuple (`(T, R, Y, X, ...)`)
-        - [ ] Generics aka. templates in c++ (`T<Args>`)
-    - [ ] Statements
-        - [x] returns
-        - [x] if
-        - [x] let
-        - [ ] functions (needs to add generecs to it)
+  - [ ] Expressions
+    - [x] Primaries
+  - [x] Math (+, -, *, **, /, %)
+    - [x] Comparition (==, !=, <, >, >=, =<)
+    - [x] Logical (not, and, or)
+    - [x] Bitewise (&, |, ~, <<, >>)
+    - [x] inline if (if .. then .. else ..)
+    - [x] as (type casting `expr as Type`)
+    - [x] call expression
+    - [x] member access
+    - [x] Subscript (`expr[v]`)
+    - [x] Scope resolusion
+    - [x] Tuple
+    - [x] assignment
+    - [ ] referencing and dereferencing (`&expr` and `*expr`)
+  - [ ] Types
+    - [x] Built-in types (**int**, **uint**, **float**, **string**, **void**, **bool**)
+    - [x] Slices (`T[int]`, `T[]`)
+    - [ ] Tuple (`(T, R, Y, X, ...)`)
+    - [ ] Generics aka. templates in c++ (`T<Args>`)
+  - [ ] Statements
+    - [x] returns
+    - [x] if
+    - [x] let
+    - [ ] functions (needs to add generecs to it)
 
-## Parsing `examples/parsing.haste` output
+### Parsing `examples/parsing.haste` output
+
 ![alt text](imgs/image.png)
+
 ```
 (func_dec name:fact args:(, (typed_ident (x) (type_lit int))) ret_type:(type_lit int) body:(    (block {
         (if ((binary (ident x) <= (int 0)))         (return (int 1)) else NONE)
@@ -71,10 +80,12 @@ $ ./haste-test
     })))
 ```
 
-# My goals
+## My goals
+
 - [ ] Better Error messages
 - [ ] Adding a good type-checking & Semantic analysis
 - [ ] Traspiling haste to c (I'm planing on using llvm to compile haste directly to machine code)
 
-# Something
+## Something
+
 I dropped the idea of tags, sorry [Amir](https://github.com/Ameeer1)
