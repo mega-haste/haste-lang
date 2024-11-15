@@ -6,19 +6,18 @@
 #include <sstream>
 
 int main(int argc, char *argv[]) {
-    std::ifstream file("main.haste");
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    std::string content = buffer.str();
+  std::ifstream file("main.haste");
+  std::stringstream buffer;
+  buffer << file.rdbuf();
+  std::string content = buffer.str();
 
-    Scanner scanner(content);
-    TokenList tokens = scanner.scan();
+  Scanner scanner(content);
+  TokenList tokens = scanner.scan();
 
-    Parser parser(tokens);
-    auto res = parser.parse();
+  Parser parser(tokens);
+  auto res = parser.parse();
 
-    res.pretty_print();
+  res.pretty_print();
 
-    return 0;
+  return 0;
 }
-

@@ -3,90 +3,90 @@
 
 #include "AST/Expressions.hpp"
 #include "AST/Statments.hpp"
+#include "TranslationUnit.hpp"
 #include "tokens.hpp"
 #include <cstddef>
 #include <initializer_list>
-#include "TranslationUnit.hpp"
 
 using namespace AST;
 
-constexpr uint MAX_PRAM_COUT  = 128;
+constexpr uint MAX_PRAM_COUT = 128;
 constexpr uint MAX_TUPLE_COUT = 60;
 
 class ParserError {
-  public:
-    Token token;
-    const char *message;
+public:
+  Token token;
+  const char *message;
 
-    ParserError(Token token, const char *message);
+  ParserError(Token token, const char *message);
 };
 
 class Parser {
-  public:
-    Parser(TokenList tokens);
+public:
+  Parser(TokenList tokens);
 
-    TranslationUnit parse();
+  TranslationUnit parse();
 
-  private:
-    static inline Token f = Token(TokenType::Void, "void");
-    TokenList m_tokens;
-    std::size_t m_current = 0;
+private:
+  static inline Token f = Token(TokenType::Void, "void");
+  TokenList m_tokens;
+  std::size_t m_current = 0;
 
-    Statement declaration(void);
-    void static_declaration(TranslationUnit &tu);
-    Statement statement(void);
+  Statement declaration(void);
+  void static_declaration(TranslationUnit &tu);
+  Statement statement(void);
 
-    std::unique_ptr<FunctionDef> function(void);
-    Statement let(void);
+  std::unique_ptr<FunctionDef> function(void);
+  Statement let(void);
 
-    std::vector<Statement> block(void);
-    Statement if_condition(void);
-    Statement $return(void);
+  std::vector<Statement> block(void);
+  Statement if_condition(void);
+  Statement $return(void);
 
-    TypedIdentifier parse_typed_ident(void);
-    Type parse_type(void);
+  TypedIdentifier parse_typed_ident(void);
+  Type parse_type(void);
 
-    Statement expression_statement(void);
+  Statement expression_statement(void);
 
-    Expression expression(void);
-    Expression assignment(void);
-    Expression inline_if(void);
-    Expression as(void);
-    Expression $or(void);
-    Expression $and(void);
-    Expression bitwise_and(void);
-    Expression bitwise_or(void);
-    Expression equality(void);
-    Expression relational(void);
-    Expression bitwise_shift(void);
-    Expression addition(void);
-    Expression multiplication(void);
-    Expression power(void);
-    Expression nuts(void); // 🥜
-    Expression unary(void);
-    Expression call(void);
-    Expression finish_call(Expression &&callee);
-    Expression scope_resolution(void);
-    Expression primary(void);
+  Expression expression(void);
+  Expression assignment(void);
+  Expression inline_if(void);
+  Expression as(void);
+  Expression $or(void);
+  Expression $and(void);
+  Expression bitwise_and(void);
+  Expression bitwise_or(void);
+  Expression equality(void);
+  Expression relational(void);
+  Expression bitwise_shift(void);
+  Expression addition(void);
+  Expression multiplication(void);
+  Expression power(void);
+  Expression nuts(void); // 🥜
+  Expression unary(void);
+  Expression call(void);
+  Expression finish_call(Expression &&callee);
+  Expression scope_resolution(void);
+  Expression primary(void);
 
-    Expression parse_tuple(std::vector<Expression> &&exprs);
+  Expression parse_tuple(std::vector<Expression> &&exprs);
 
-    const bool match(std::initializer_list<TokenType> types);
-    const bool check(TokenType type) const;
-    const bool is_at_end(void) const;
+  const bool match(std::initializer_list<TokenType> types);
+  const bool check(TokenType type) const;
+  const bool is_at_end(void) const;
 
-    const Token &consume_semi_colon(const char *message);
-    const Token &consume_identifier(const char *message);
+  const Token &consume_semi_colon(const char *message);
+  const Token &consume_identifier(const char *message);
 
-    const Token &consume(TokenType type, const char *message);
-    const Token &peek(void) const;
-    const Token &peek(int ahead) const;
-    const Token &previous(void) const;
-    const Token &advance(void);
-    ParserError error(Token token, const char *message);
+  const Token &consume(TokenType type, const char *message);
+  const Token &peek(void) const;
+  const Token &peek(int ahead) const;
+  const Token &previous(void) const;
+  const Token &advance(void);
+  ParserError error(Token token, const char *message);
 
-    void synchronize(void);
-    void static_synchronize(void);
+  void synchronize(void);
+  void static_synchronize(void);
 };
 
 #endif
