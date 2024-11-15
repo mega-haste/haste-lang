@@ -28,7 +28,7 @@ make
 - [ ] Parser
   - [ ] Expressions
     - [x] Primaries
-  - [x] Math (+, -, *, **, /, %)
+    - [x] Math (+, -, *, **, /, %)
     - [x] Comparition (==, !=, <, >, >=, =<)
     - [x] Logical (not, and, or)
     - [x] Bitewise (&, |, ~, <<, >>)
