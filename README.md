@@ -1,5 +1,7 @@
 # haste-lang
 
+![turbo](./imgs/turbo.png)
+
 ## How to try haste?
 
 1. you got to install the repo first and navigate to where you clone the repo
