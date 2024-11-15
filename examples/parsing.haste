@@ -20,8 +20,8 @@ func main() {
     T::b().c(d.g)[5] += "tri tri"; # We those too -= *= /= %= **=;
     x.a = if true then "yep" else "yop";
 
-    let a: int = 5;
-    let b: int = 6;
+    let a: auto = 5;
+    let b: auto = 6;
 
     let mut c = add(a as float, b as float);
     io.writefloat(c);

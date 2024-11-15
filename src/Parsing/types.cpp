@@ -1,4 +1,5 @@
 #include "Parser.hpp"
+#include "tokens.hpp"
 
 TypedIdentifier Parser::parse_typed_ident(void) {
   if (!match({TokenType::Identifier, TokenType::SpicialIdentifier})) {
@@ -13,16 +14,16 @@ TypedIdentifier Parser::parse_typed_ident(void) {
 }
 
 Type Parser::parse_type(void) {
-  if (match({TokenType::Int, TokenType::UInt, TokenType::Float, TokenType::String, TokenType::Void, TokenType::Bool}))
-  {
+  if (match({TokenType::Int, TokenType::UInt, TokenType::Float,
+             TokenType::String, TokenType::Void, TokenType::Bool,
+             TokenType::Auto})) {
     const Token &token = previous();
     if (match({TokenType::OpenSquareBracket})) {
-      std::optional<Token> size = match({TokenType::IntLit}) ? std::optional(previous()) : std::nullopt;
+      std::optional<Token> size =
+          match({TokenType::IntLit}) ? std::optional(previous()) : std::nullopt;
       consume(TokenType::CloseSquareBracket, "Exprected closing bracket ']'.");
-      return std::make_unique<ArrayType>(
-        std::make_unique<TypeLiteral>(token),
-        size
-      );
+      return std::make_unique<ArrayType>(std::make_unique<TypeLiteral>(token),
+                                         size);
     }
     return std::make_unique<TypeLiteral>(token);
   }

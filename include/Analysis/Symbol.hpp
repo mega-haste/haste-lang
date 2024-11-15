@@ -15,7 +15,8 @@ class ArrayType;
 class IdentifierType;
 class FunctionType;
 
-enum NativeType {
+enum class NativeType : char {
+  Unknown = -1,
   Auto,
   Void,
 

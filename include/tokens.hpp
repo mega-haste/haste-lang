@@ -82,6 +82,7 @@ enum class TokenType {
   Float,
   Bool,
   Void,
+  Auto,
 
   //// Control flows
   If,
