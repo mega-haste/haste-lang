@@ -153,11 +153,13 @@ TokenList Scanner::scan() {
 
     case '\n':
       m_line++;
+      m_column = 1;
       break;
 
     case ' ':
     case '\t':
     case '\r':
+      m_column++;
       break;
 
     default:
@@ -234,7 +236,8 @@ void Scanner::add_token(TokenType type) {
   add_token(type, m_content.substr(m_start, m_current - m_start));
 }
 void Scanner::add_token(TokenType type, std::string value) {
-  m_tokens.push_back(Token(type, value, m_line, m_start + 1));
+  m_tokens.push_back(Token(type, value, m_line, m_column));
+  m_column += value.size();
 }
 
 bool Scanner::ident_match(std::string ident) { UNIMPLEMENTED; }
@@ -302,7 +305,7 @@ char Scanner::advance(std::size_t i) {
 Scanner::Ident Scanner::get_next_ident() {
   std::size_t current = m_current;
   std::string buffer = "";
-#define pk m_content[current]
+  const char pk = m_content[current];
   while ((!at_end(current)) && is_alphanum(pk)) {
     buffer.push_back(pk);
     current++;
