@@ -190,10 +190,11 @@ TEST(ScannerTest, KeyWords) {
     "string "
     "void "
     "bool "
-    "auto");
+    "auto "
+    "char");
 
   // Create the expected token list based on the enum definitions and comments
-  EXPECT_EQ(tokens.size(), 25);
+  EXPECT_EQ(tokens.size(), 26);
 
   // Check that each token matches the expected token type
   EXPECT_TOKEN(Let);
@@ -220,4 +221,5 @@ TEST(ScannerTest, KeyWords) {
   EXPECT_TOKEN(Void);
   EXPECT_TOKEN(Bool);
   EXPECT_TOKEN(Auto);
+  EXPECT_TOKEN(Char);
 }

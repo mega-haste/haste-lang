@@ -2,14 +2,18 @@
 #include "Scanner.hpp"
 #include "tokens.hpp"
 #include <fstream>
-#include <iostream>
 #include <sstream>
+#include <string>
 
 int main(int argc, char *argv[]) {
   std::ifstream file("main.haste");
   std::stringstream buffer;
   buffer << file.rdbuf();
   std::string content = buffer.str();
+
+  // std::string content = "func main() {\
+  //     if (func) {}\
+  //   }";
 
   Scanner scanner(content);
   TokenList tokens = scanner.scan();
@@ -18,6 +22,11 @@ int main(int argc, char *argv[]) {
   auto res = parser.parse();
 
   res.pretty_print();
+  std::cout << "===========\nParsing done!\n===========\n";
+
+  res.analyse();
+
+  std::cout << "===========\nAnalysed done!\n===========\n";
 
   return 0;
 }

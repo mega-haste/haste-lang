@@ -1,5 +1,7 @@
+#include "AST/Statments.hpp"
 #include "Parser.hpp"
 #include "tokens.hpp"
+#include <memory>
 
 Statement Parser::declaration(void) {
   try {
@@ -10,9 +12,11 @@ Statement Parser::declaration(void) {
 
     return statement();
   } catch (ParserError &e) {
+    report_error(e);
     synchronize();
-    return nullptr;
   }
+
+  return std::make_unique<NoneStmt>();
 }
 
 void Parser::static_declaration(TranslationUnit &tu) {
@@ -21,9 +25,12 @@ void Parser::static_declaration(TranslationUnit &tu) {
       auto v = function();
       tu.add_function(std::move(v));
     } else {
-      throw error(peek(), "Only allowed `func`, `struct`, `import`, `const` and `use` on the top level or whatever you call it.");
+      throw error(peek(),
+                  "Only allowed `func`, `struct`, `import`, `const` and `use` "
+                  "on the top level. got {}.");
     }
   } catch (ParserError &e) {
+    report_error(e);
     static_synchronize();
   }
 }

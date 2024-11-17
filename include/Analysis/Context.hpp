@@ -15,8 +15,13 @@ public:
 
   SymbolTable symbol_table;
 
-  bool is_declared(std::string &key);
-  bool is_defined(std::string &key);
+  bool is_declared(const std::string &key);
+  bool is_defined(const std::string &key);
+  bool is_in_function(void) const;
+
+  void declare(const std::string &name);
+  void define(const std::string &name, SymbolType &&type);
+  void define(const std::string &name, SymbolType &&type, bool mut = false);
 };
 
 } // namespace Analysis

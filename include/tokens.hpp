@@ -76,6 +76,7 @@ enum class TokenType {
   Return,
 
   // Type keywords
+  Char,
   String,
   UInt,
   Int,

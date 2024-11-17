@@ -1,7 +1,9 @@
 #pragma once
 
 #include "Analysis/Context.hpp"
+#include "Analysis/Symbol.hpp"
 #include "TypeNode.hpp"
+#include "macros.hpp"
 #include "tokens.hpp"
 #include <cmath>
 #include <cstdlib>
@@ -11,13 +13,26 @@
 
 namespace AST {
 
+using Analysis::NativeType;
+using Analysis::SymbolHandler;
+using Analysis::SymbolType;
+
 class ExpressionNode {
 public:
   virtual const std::string prettify(void) const = 0;
-  virtual const Analysis::Context analyse() const {};
+  virtual SymbolType get_type(Analysis::Context &ctx) const = 0;
+  virtual const void analyse(Analysis::Context &ctx) const {};
 };
 
 using Expression = std::unique_ptr<ExpressionNode>;
+
+class ExpressionNone : public ExpressionNode {
+public:
+  const std::string prettify() const override { return "(NONE)"; }
+  SymbolType get_type(Analysis::Context &ctx) const override {
+    return Analysis::NativeType::Unknown;
+  }
+};
 
 class LiteralExpression : public ExpressionNode {
 public:
@@ -39,6 +54,20 @@ public:
       std::exit(70);
     }
   }
+  SymbolType get_type(Analysis::Context &ctx) const override {
+    switch (value.type) {
+    case TokenType::CharLit:
+      return NativeType::Char;
+    case TokenType::StringLit:
+      return NativeType::String;
+    case TokenType::IntLit:
+      return NativeType::Int;
+    case TokenType::FloatLit:
+      return NativeType::Float;
+    default:
+      return NativeType::Unknown;
+    }
+  }
 };
 
 class BooleanExpression : public ExpressionNode {
@@ -49,6 +78,9 @@ public:
 
   const std::string prettify(void) const override {
     return value ? "(bool true)" : "(bool false)";
+  }
+  SymbolType get_type(Analysis::Context &ctx) const override {
+    return NativeType::Bool;
   }
 };
 
@@ -62,6 +94,10 @@ public:
 
   const std::string prettify(void) const override {
     return std::format("(unary {} {})", op.value, rhs->prettify());
+  }
+
+  SymbolType get_type(Analysis::Context &ctx) const override {
+    return Analysis::do_unary(op, rhs->get_type(ctx));
   }
 };
 
@@ -78,6 +114,10 @@ public:
     return std::format("(binary {} {} {})", lhs->prettify(), op.value,
                        rhs->prettify());
   }
+
+  SymbolType get_type(Analysis::Context &ctx) const override {
+    return Analysis::do_binary(lhs->get_type(ctx), op, rhs->get_type(ctx));
+  }
 };
 
 class GroupingExpression : public ExpressionNode {
@@ -88,6 +128,10 @@ public:
 
   const std::string prettify(void) const override {
     return std::format("(grouping {})", expr->prettify());
+  }
+
+  SymbolType get_type(Analysis::Context &ctx) const override {
+    return expr->get_type(ctx);
   }
 };
 
@@ -106,6 +150,10 @@ public:
     return std::format("(if {} then {} else {})", condition->prettify(),
                        consequent->prettify(), alternate->prettify());
   }
+
+  SymbolType get_type(Analysis::Context &ctx) const override {
+    return consequent->get_type(ctx);
+  }
 };
 
 class AsExpression : public ExpressionNode {
@@ -118,6 +166,10 @@ public:
 
   const std::string prettify(void) const override {
     return std::format("(as {} {})", expr->prettify(), type->prettify());
+  }
+
+  SymbolType get_type(Analysis::Context &ctx) const override {
+    return type->get_type();
   }
 };
 
@@ -136,6 +188,12 @@ public:
     default:
       std::exit(70);
     }
+  }
+
+  SymbolType get_type(Analysis::Context &ctx) const override {
+    if (ctx.is_defined(value.value))
+      return *ctx.symbol_table.local_first_look_up(value.value)->type;
+    return NativeType::Unknown;
   }
 };
 
@@ -163,6 +221,9 @@ public:
 
     return std::format("(call {}({}))", callee->prettify(), arg_str);
   }
+  SymbolType get_type(Analysis::Context &ctx) const override {
+    UNIMPLEMENTED("CallExpression");
+  }
 };
 
 class MemberAccessExpression : public ExpressionNode {
@@ -177,6 +238,10 @@ public:
 
   const std::string prettify(void) const override {
     return std::format("(access {} {})", group->prettify(), member.value);
+  }
+
+  SymbolType get_type(Analysis::Context &ctx) const override {
+    UNIMPLEMENTED("MemberAccessExpression");
   }
 };
 
@@ -196,6 +261,9 @@ public:
   const std::string prettify(void) const override {
     return std::format("(subscript {} {})", item->prettify(),
                        index->prettify());
+  }
+  SymbolType get_type(Analysis::Context &ctx) const override {
+    UNIMPLEMENTED("SubscriptingExpression");
   }
 };
 
@@ -223,6 +291,9 @@ public:
 
     return std::format("(tuple ({}))", ele_str);
   }
+  SymbolType get_type(Analysis::Context &ctx) const override {
+    UNIMPLEMENTED("Tuple");
+  }
 };
 
 class ScopeResolutionExpression : public ExpressionNode {
@@ -239,6 +310,9 @@ public:
     return std::format("(scope_resolution {} {})", group->prettify(),
                        member.value);
   }
+  SymbolType get_type(Analysis::Context &ctx) const override {
+    UNIMPLEMENTED("ScopeResolutionExpression");
+  }
 };
 
 class AssignExpression : public ExpressionNode {
@@ -254,6 +328,9 @@ public:
   const std::string prettify(void) const override {
     return std::format("(assign {} {} {})", lhs->prettify(), eq.value,
                        value->prettify());
+  }
+  SymbolType get_type(Analysis::Context &ctx) const override {
+    return value->get_type(ctx);
   }
 };
 

@@ -3,5 +3,19 @@
 #include <iostream>
 
 #define LOG(msg) std::cout << "LOG: " << msg << '\n';
-#define UNIMPLEMENTED std::cout << "Unimplemented" << std::endl; exit(1);
-
+#define UNIMPLEMENTED(tag)                                                     \
+  std::cout << "Unimplemented: " << tag << std::endl;                          \
+  exit(1);
+#define TRY_OR_REPORT(stmt)                                                    \
+  try {                                                                        \
+    stmt;                                                                      \
+  } catch (ParserError & e) {                                                  \
+    report_error(e);                                                           \
+    synchronize();                                                             \
+  }
+#define TRY_OR_REPORT_NO_SYNC(stmt)                                            \
+  try {                                                                        \
+    stmt;                                                                      \
+  } catch (ParserError & e) {                                                  \
+    report_error(e);                                                           \
+  }

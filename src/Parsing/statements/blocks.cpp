@@ -1,4 +1,5 @@
 #include "Parser.hpp"
+#include "macros.hpp"
 
 std::vector<Statement> Parser::block(void) {
   std::vector<Statement> statements;

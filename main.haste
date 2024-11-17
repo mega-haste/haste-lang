@@ -1,0 +1,6 @@
+# comment
+
+func main() {
+  let mut a: auto = 5;
+  let b: string = 5;
+}

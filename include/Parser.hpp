@@ -11,14 +11,14 @@
 using namespace AST;
 
 constexpr uint MAX_PRAM_COUT = 128;
-constexpr uint MAX_TUPLE_COUT = 60;
+constexpr uint MAX_TUPLE_COUT = 64;
 
 class ParserError {
 public:
-  Token token;
+  const Token &token;
   const char *message;
 
-  ParserError(Token token, const char *message);
+  ParserError(const Token &token, const char *message);
 };
 
 class Parser {
@@ -31,6 +31,7 @@ private:
   static inline Token f = Token(TokenType::Void, "void");
   TokenList m_tokens;
   std::size_t m_current = 0;
+  bool m_had_error = false;
 
   Statement declaration(void);
   void static_declaration(TranslationUnit &tu);
@@ -83,7 +84,9 @@ private:
   const Token &peek(int ahead) const;
   const Token &previous(void) const;
   const Token &advance(void);
-  ParserError error(Token token, const char *message);
+  ParserError error(const Token &token, const char *message);
+
+  void report_error(ParserError &error);
 
   void synchronize(void);
   void static_synchronize(void);
