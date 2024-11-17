@@ -42,9 +42,12 @@ public:
   SymbolHandler type = std::make_shared<SymbolType>(NativeType::Unknown);
   bool defined = false;
   bool mut = false;
+  int uses = 0;
 
   Symbol();
   Symbol(SymbolHandler &&type, bool defined, bool mut);
+
+  bool is_used(void) const;
 
   std::string prettify() const;
 };

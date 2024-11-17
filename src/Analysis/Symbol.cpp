@@ -1,6 +1,5 @@
 #include "Analysis/Symbol.hpp"
 #include "Analysis/Context.hpp"
-#include "macros.hpp"
 #include "tokens.hpp"
 #include <format>
 #include <memory>
@@ -14,6 +13,7 @@ Symbol::Symbol()
       mut(false) {}
 Symbol::Symbol(SymbolHandler &&type, bool defined, bool mut)
     : type(std::move(type)), defined(defined), mut(mut) {}
+bool Symbol::is_used(void) const { return uses > 0; }
 std::string Symbol::prettify() const { return Analysis::prettify(*type); }
 
 SymbolArrayType::SymbolArrayType(SymbolHandler &&type)
@@ -234,6 +234,7 @@ std::string prettify(SymbolType &type) {
       return "Char";
     }
   }
+  return "BAD";
 }
 
 } // namespace Analysis

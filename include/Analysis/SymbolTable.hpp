@@ -3,19 +3,17 @@
 
 #include "Symbol.hpp"
 #include <deque>
-#include <optional>
 #include <string>
 #include <unordered_map>
 
 namespace Analysis {
-
-using Scope = std::unordered_map<std::string, Symbol>;
 
 class SymbolTable {
 private:
   void print_table(void) const;
 
 public:
+  using Scope = std::unordered_map<std::string, Symbol>;
   std::deque<Scope> scopes;
 
   SymbolTable();
@@ -26,7 +24,7 @@ public:
   void scope_begin(void);
   void scope_end(void);
 
-  std::optional<Symbol> local_first_look_up(const std::string &key);
+  Symbol *local_first_look_up(const std::string &key);
 
   Scope &get_current_scope(void);
 };

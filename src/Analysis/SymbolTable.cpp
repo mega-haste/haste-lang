@@ -6,10 +6,9 @@
 #include <format>
 #include <iostream>
 #include <memory>
-#include <optional>
 #include <stdexcept>
 
-using namespace Analysis;
+namespace Analysis {
 
 SymbolTable::SymbolTable() { scopes.push_back(Scope()); }
 
@@ -47,19 +46,20 @@ void SymbolTable::define(const std::string &name, SymbolType &&type, bool mut) {
 }
 
 void SymbolTable::scope_begin(void) { scopes.push_back(Scope()); }
-void SymbolTable::scope_end(void) {
-  print_table();
-  scopes.pop_back();
-}
+void SymbolTable::scope_end(void) { scopes.pop_back(); }
 
-std::optional<Symbol> SymbolTable::local_first_look_up(const std::string &key) {
+Symbol *SymbolTable::local_first_look_up(const std::string &key) {
   for (std::size_t i = scopes.size() - 1; i > 0; i--) {
     if (scopes[i].contains(key)) {
-      return std::make_optional<Symbol>(scopes[i][key]);
+      return &scopes[i][key];
     }
   }
 
-  return std::nullopt;
+  return nullptr;
 }
 
-Scope &SymbolTable::get_current_scope(void) { return scopes.back(); }
+SymbolTable::Scope &SymbolTable::get_current_scope(void) {
+  return scopes.back();
+}
+
+} // namespace Analysis

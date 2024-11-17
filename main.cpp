@@ -2,6 +2,7 @@
 #include "Scanner.hpp"
 #include "tokens.hpp"
 #include <fstream>
+#include <ostream>
 #include <sstream>
 #include <string>
 
@@ -21,12 +22,9 @@ int main(int argc, char *argv[]) {
   Parser parser(tokens);
   auto res = parser.parse();
 
-  res.pretty_print();
-  std::cout << "=========== Parsing done! ===========\n";
-
+  // res.pretty_print();
   res.analyse();
 
-  std::cout << "=========== Analysed done! ===========\n";
-
+  std::cout << std::endl;
   return 0;
 }

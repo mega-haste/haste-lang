@@ -23,6 +23,8 @@ public:
     for (auto &fn : functions) {
       fn->analyse(ctx);
     }
+
+    ctx.report_summary();
   }
 };
 

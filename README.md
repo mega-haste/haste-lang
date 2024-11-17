@@ -55,8 +55,12 @@ make
     - [ ] functions (needs to add generecs to it)
   - [ ] Semantic Analysis
     - [x] Added basic types (arrays, functions, native types eg. bool, int, uint, char, string)
-    - [ ] Working immutability
-    - [ ] Warnings (unused variables/functions, unused mut)
+    - [-] Working immutability
+    - [ ] Function calls
+    - [ ] Subscripting
+    - [ ] Member accessing
+    - [ ] Scope resolusion
+    - [-] Warnings (unused variables/functions, unused mut)
     - [ ] tuples and multi dimentional arrays
     - [ ] Custom Defined types
     - [ ] Generics

@@ -5,7 +5,6 @@
 #include <cmath>
 #include <cstdlib>
 #include <format>
-#include <iostream>
 #include <memory>
 #include <string>
 
@@ -67,6 +66,10 @@ const std::string UnaryExpression::prettify(void) const {
 SymbolType UnaryExpression::get_type(Analysis::Context &ctx) const {
   return Analysis::do_unary(op, rhs->get_type(ctx));
 }
+const void UnaryExpression::analyse(Analysis::Context &ctx) const {
+  // TODO
+  rhs->analyse(ctx);
+}
 
 BinaryExpression::BinaryExpression(Expression &&lhs, const Token &op,
                                    Expression &&rhs)
@@ -78,6 +81,11 @@ const std::string BinaryExpression::prettify(void) const {
 SymbolType BinaryExpression::get_type(Analysis::Context &ctx) const {
   return Analysis::do_binary(lhs->get_type(ctx), op, rhs->get_type(ctx));
 }
+const void BinaryExpression::analyse(Analysis::Context &ctx) const {
+  // TODO
+  lhs->analyse(ctx);
+  rhs->analyse(ctx);
+}
 
 GroupingExpression::GroupingExpression(Expression &&expr)
     : expr(std::move(expr)) {}
@@ -86,6 +94,10 @@ const std::string GroupingExpression::prettify(void) const {
 }
 SymbolType GroupingExpression::get_type(Analysis::Context &ctx) const {
   return expr->get_type(ctx);
+}
+const void GroupingExpression::analyse(Analysis::Context &ctx) const {
+  // TODO
+  expr->analyse(ctx);
 }
 
 InlineIf::InlineIf(Expression &&condition, Expression &&consequent,
@@ -99,6 +111,14 @@ const std::string InlineIf::prettify(void) const {
 SymbolType InlineIf::get_type(Analysis::Context &ctx) const {
   return consequent->get_type(ctx);
 }
+const void InlineIf::analyse(Analysis::Context &ctx) const {
+  SymbolType condition_type = condition->get_type(ctx);
+  if (!Analysis::is_bool(condition_type)) {
+    UNIMPLEMENTED("InlineIf analysis (condition checking)");
+  }
+  consequent->analyse(ctx);
+  alternate->analyse(ctx);
+}
 
 AsExpression::AsExpression(Expression &&expr, Type &&type)
     : expr(std::move(expr)), type(std::move(type)) {}
@@ -107,6 +127,9 @@ const std::string AsExpression::prettify(void) const {
 }
 SymbolType AsExpression::get_type(Analysis::Context &ctx) const {
   return type->get_type();
+}
+const void AsExpression::analyse(Analysis::Context &ctx) const {
+  expr->analyse(ctx);
 }
 
 IdentifierExpression::IdentifierExpression(const Token &v) : value(v) {}
@@ -121,9 +144,21 @@ const std::string IdentifierExpression::prettify(void) const {
   }
 }
 SymbolType IdentifierExpression::get_type(Analysis::Context &ctx) const {
-  if (ctx.is_defined(value.value))
-    return *ctx.symbol_table.local_first_look_up(value.value).value().type;
+  if (ctx.is_defined(value.value)) {
+    Analysis::Symbol *symbol =
+        ctx.symbol_table.local_first_look_up(value.value);
+    symbol->uses++;
+    return *symbol->type;
+  }
   return NativeType::Unknown;
+}
+const void IdentifierExpression::analyse(Analysis::Context &ctx) const {
+  if (ctx.is_defined(value.value)) {
+    Analysis::Symbol *symbol =
+        ctx.symbol_table.local_first_look_up(value.value);
+    symbol->uses++;
+    return;
+  }
 }
 
 CallExpression::CallExpression(Expression &&callee, const Token &paren,
@@ -213,6 +248,20 @@ const std::string AssignExpression::prettify(void) const {
                      value->prettify());
 }
 SymbolType AssignExpression::get_type(Analysis::Context &ctx) const {
-  return value->get_type(ctx);
+  return lhs->get_type(ctx);
 }
+const void AssignExpression::analyse(Analysis::Context &ctx) const {
+  // TODO
+  lhs->analyse(ctx);
+  value->analyse(ctx);
+  SymbolType lhs_type = lhs->get_type(ctx);
+  SymbolType rhs_type = value->get_type(ctx);
+  if (!Analysis::match(lhs_type, rhs_type)) {
+    ctx.report_error(eq, "Mismatched types",
+                     std::format("Expected rvalue to be '{}' got '{}'.",
+                                 Analysis::prettify(lhs_type),
+                                 Analysis::prettify(rhs_type)));
+  }
+}
+
 } // namespace AST

@@ -42,11 +42,11 @@ const std::string BlockStatement::prettify(const int depth) const {
                      '}');
 }
 void BlockStatement::analyse(Analysis::Context &ctx) const {
-  ctx.symbol_table.scope_begin();
+  ctx.scope_begin();
   for (auto &statement : statements) {
     statement->analyse(ctx);
   }
-  ctx.symbol_table.scope_end();
+  ctx.scope_end();
 }
 
 ExpressionStatement::ExpressionStatement(Expression expr)
@@ -87,14 +87,19 @@ void FunctionDef::analyse(Analysis::Context &ctx) const {
   }
   ctx.define(identifier.value, type, false);
 
-  ctx.symbol_table.scope_begin();
+  ctx.scope_begin();
 
   type.define_args(ctx);
-  ctx.current_func = Context::FuncType::Function;
-  body->analyse(ctx);
-  ctx.current_func = Context::FuncType::None;
 
-  ctx.symbol_table.scope_end();
+  ctx.current_func = Context::FuncType::Function;
+  ctx.function_stack.push_back(identifier.value);
+
+  body->analyse(ctx);
+
+  ctx.current_func = Context::FuncType::None;
+  ctx.function_stack.pop_back();
+
+  ctx.scope_end();
 }
 
 LetDef::LetDef(const Token &ident, std::optional<Expression> &&value,
@@ -108,37 +113,42 @@ const std::string LetDef::prettify(const int depth) const {
 }
 void LetDef::analyse(Analysis::Context &ctx) const {
   ctx.declare(ident.value);
+
   SymbolType expected_type =
       type.has_value() ? type.value()->get_type() : Analysis::NativeType::Auto;
   SymbolType value_type =
       value.has_value() ? value.value()->get_type(ctx) : NativeType::Undefined;
+
   if (Analysis::is_auto(expected_type)) {
     expected_type = std::move(value_type);
 
     if (Analysis::is_auto(expected_type) ||
         Analysis::is_undefined(expected_type)) {
-      std::cerr << "[" << ident.line << ":" << ident.column << "] "
-                << "You need either set a known-type value to the variable, or "
-                   "explicitly set the type of the variable.\n";
+      ctx.report_error(ident, "Unknown type",
+                       "You need either set a known-type value to the "
+                       "variable, or explicitly set the type of the variable.");
       return;
     }
     ctx.define(ident.value, std::move(expected_type), mut);
     return;
   }
+
   if (Analysis::is_undefined(value_type)) {
-    std::cerr << "[" << ident.line << ":" << ident.column << "] "
-              << "You need either set a known-type value to the variable, or "
-                 "explicitly set the type of the variable.\n";
+    ctx.report_error(ident, "Unknown type",
+                     "You need either set a known-type value to the variable, "
+                     "or explicitly set the type of the variable.");
     return;
   }
+
   if (!Analysis::match(expected_type, value_type)) {
-    std::cerr << "[" << ident.line << ":" << ident.column << "] "
-              << "Your variable types doesn't match the value type. try "
-                 "implicit type inference or use `auto` instead.\n";
+    ctx.report_error(ident, "Unknown type",
+                     "Your variable types doesn't match the value type. Try "
+                     "implicit type inference or use `auto` instead.");
     return;
   }
-  LOG(Analysis::prettify(expected_type)
-      << " " << Analysis::prettify(value_type));
+
+  if (value.has_value())
+    value.value()->analyse(ctx);
   ctx.define(ident.value, std::move(expected_type), mut);
 }
 

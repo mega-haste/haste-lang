@@ -52,6 +52,7 @@ public:
   explicit UnaryExpression(const Token &op, Expression &&rhs);
   const std::string prettify(void) const override;
   SymbolType get_type(Analysis::Context &ctx) const override;
+  const void analyse(Analysis::Context &ctx) const override;
 };
 
 class BinaryExpression : public ExpressionNode {
@@ -64,6 +65,7 @@ public:
                             Expression &&rhs);
   const std::string prettify(void) const override;
   SymbolType get_type(Analysis::Context &ctx) const override;
+  const void analyse(Analysis::Context &ctx) const override;
 };
 
 class GroupingExpression : public ExpressionNode {
@@ -73,6 +75,7 @@ public:
   explicit GroupingExpression(Expression &&expr);
   const std::string prettify(void) const override;
   SymbolType get_type(Analysis::Context &ctx) const override;
+  const void analyse(Analysis::Context &ctx) const override;
 };
 
 class InlineIf : public ExpressionNode {
@@ -85,6 +88,7 @@ public:
                     Expression &&alternate);
   const std::string prettify(void) const override;
   SymbolType get_type(Analysis::Context &ctx) const override;
+  const void analyse(Analysis::Context &ctx) const override;
 };
 
 class AsExpression : public ExpressionNode {
@@ -95,6 +99,7 @@ public:
   explicit AsExpression(Expression &&expr, Type &&type);
   const std::string prettify(void) const override;
   SymbolType get_type(Analysis::Context &ctx) const override;
+  const void analyse(Analysis::Context &ctx) const override;
 };
 
 class IdentifierExpression : public ExpressionNode {
@@ -104,6 +109,7 @@ public:
   explicit IdentifierExpression(const Token &v);
   const std::string prettify(void) const override;
   SymbolType get_type(Analysis::Context &ctx) const override;
+  const void analyse(Analysis::Context &ctx) const override;
 };
 
 class CallExpression : public ExpressionNode {
@@ -177,6 +183,7 @@ public:
                             Expression &&value);
   const std::string prettify(void) const override;
   SymbolType get_type(Analysis::Context &ctx) const override;
+  const void analyse(Analysis::Context &ctx) const override;
 };
 
 } // namespace AST
