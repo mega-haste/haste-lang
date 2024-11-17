@@ -133,7 +133,7 @@ public:
     return type == other.type && value == other.value;
   }
 
-  std::string to_string() {
+  std::string to_string() const {
     std::stringstream stream;
     stream << "Token(";
     stream << token_tostring(type);

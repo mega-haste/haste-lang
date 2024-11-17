@@ -1,6 +1,7 @@
-# comment
+func add(x: float, y: float): float
+  = x + y;
 
-func main() {
+func main(argc: uint) {
   let mut a: auto = 5;
-  let b: string = 5;
+  let b = a;
 }

@@ -22,11 +22,11 @@ int main(int argc, char *argv[]) {
   auto res = parser.parse();
 
   res.pretty_print();
-  std::cout << "===========\nParsing done!\n===========\n";
+  std::cout << "=========== Parsing done! ===========\n";
 
   res.analyse();
 
-  std::cout << "===========\nAnalysed done!\n===========\n";
+  std::cout << "=========== Analysed done! ===========\n";
 
   return 0;
 }

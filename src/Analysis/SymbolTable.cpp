@@ -14,15 +14,17 @@ using namespace Analysis;
 SymbolTable::SymbolTable() { scopes.push_back(Scope()); }
 
 void SymbolTable::print_table(void) const {
-  for (std::size_t i = scopes.size() - 1; i > 0; i--) {
-    std::cout << "======================\n";
-    const Scope &scope = scopes[i];
+  std::cout << "**** Started ****\n";
+  int i = 0;
+  for (auto &scope : scopes) {
+    std::cout << "\n>>>> Scope " << i << ":\n";
     for (auto &symbol : scope) {
-      std::cout << symbol.first << ":  " << symbol.second.mut << " "
-                << symbol.second.prettify() << " - ";
+      std::cout << symbol.first << ": " << (symbol.second.mut ? "mut" : "immut")
+                << " " << symbol.second.prettify() << " - ";
     }
-    std::cout << "\n======================\n";
+    i++;
   }
+  std::cout << "\nEnter to continue";
   getchar();
 }
 
@@ -46,14 +48,14 @@ void SymbolTable::define(const std::string &name, SymbolType &&type, bool mut) {
 
 void SymbolTable::scope_begin(void) { scopes.push_back(Scope()); }
 void SymbolTable::scope_end(void) {
-  // print_table();
+  print_table();
   scopes.pop_back();
 }
 
 std::optional<Symbol> SymbolTable::local_first_look_up(const std::string &key) {
   for (std::size_t i = scopes.size() - 1; i > 0; i--) {
     if (scopes[i].contains(key)) {
-      return std::make_optional<Symbol>(std::move(scopes[i][key]));
+      return std::make_optional<Symbol>(scopes[i][key]);
     }
   }
 

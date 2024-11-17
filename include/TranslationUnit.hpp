@@ -3,7 +3,6 @@
 
 #include "AST/Statments.hpp"
 #include "Analysis/Context.hpp"
-#include <vector>
 
 class TranslationUnit {
 public:

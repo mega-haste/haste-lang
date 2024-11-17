@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22.1)
 project(haste-lang)
 
-set(CMAKE_BUILD_TYPE Debug)
+# set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(BINARY_NAME haste)

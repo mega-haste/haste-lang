@@ -1,5 +1,6 @@
 #include "Analysis/Symbol.hpp"
 #include "Analysis/Context.hpp"
+#include "macros.hpp"
 #include "tokens.hpp"
 #include <format>
 #include <memory>
