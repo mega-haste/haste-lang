@@ -53,6 +53,13 @@ make
     - [x] if
     - [x] let
     - [ ] functions (needs to add generecs to it)
+  - [ ] Semantic Analysis
+    - [x] Added basic types (arrays, functions, native types eg. bool, int, uint, char, string)
+    - [ ] Working immutability
+    - [ ] Warnings (unused variables/functions, unused mut)
+    - [ ] tuples and multi dimentional arrays
+    - [ ] Custom Defined types
+    - [ ] Generics
 
 ### Parsing `examples/parsing.haste` output
 
