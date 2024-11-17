@@ -51,6 +51,7 @@ void Scanner::setup_keywords() {
   AK("void", Void);
   AK("bool", Bool);
   AK("auto", Auto);
+  AK("char", Char);
 }
 
 TokenList Scanner::scan() {
@@ -240,7 +241,7 @@ void Scanner::add_token(TokenType type, std::string value) {
   m_column += value.size();
 }
 
-bool Scanner::ident_match(std::string ident) { UNIMPLEMENTED; }
+bool Scanner::ident_match(std::string ident) { UNIMPLEMENTED("ident_match"); }
 
 bool Scanner::is(char c) { return peek() == c; }
 
@@ -305,7 +306,7 @@ char Scanner::advance(std::size_t i) {
 Scanner::Ident Scanner::get_next_ident() {
   std::size_t current = m_current;
   std::string buffer = "";
-  const char pk = m_content[current];
+#define pk m_content[current]
   while ((!at_end(current)) && is_alphanum(pk)) {
     buffer.push_back(pk);
     current++;
