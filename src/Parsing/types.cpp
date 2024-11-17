@@ -1,3 +1,4 @@
+#include "AST/TypeNode.hpp"
 #include "Parser.hpp"
 #include "tokens.hpp"
 
@@ -16,7 +17,7 @@ TypedIdentifier Parser::parse_typed_ident(void) {
 Type Parser::parse_type(void) {
   if (match({TokenType::Int, TokenType::UInt, TokenType::Float,
              TokenType::String, TokenType::Void, TokenType::Bool,
-             TokenType::Auto})) {
+             TokenType::Auto, TokenType::Char})) {
     const Token &token = previous();
     if (match({TokenType::OpenSquareBracket})) {
       std::optional<Token> size =

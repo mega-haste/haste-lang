@@ -1,14 +1,12 @@
 #include "Parser.hpp"
-#include "AST/Expressions.hpp"
 #include "tokens.hpp"
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
-#include <memory>
 
 using namespace AST;
 
-ParserError::ParserError(Token token, const char *message)
+ParserError::ParserError(const Token &token, const char *message)
     : token(token), message(message) {}
 
 Parser::Parser(TokenList tokens) : m_tokens(tokens) {}
@@ -20,6 +18,9 @@ TranslationUnit Parser::parse() {
     static_declaration(tu);
   }
 
+  if (m_had_error) {
+    std::exit(70);
+  }
   return tu;
 }
 
@@ -70,13 +71,18 @@ const Token &Parser::advance(void) {
   return previous();
 }
 
-ParserError Parser::error(Token token, const char *message) {
+ParserError Parser::error(const Token &token, const char *message) {
+  m_had_error = true;
   return ParserError(token, message);
 }
 
-void Parser::synchronize(void) {
-  advance();
+void Parser::report_error(ParserError &error) {
+  std::cerr << "[" << error.token.line << ":" << error.token.column
+            << "] Syntax Error at '" << error.token.value
+            << "': " << error.message << "\n";
+}
 
+void Parser::synchronize(void) {
   advance();
 
   while (!is_at_end()) {
@@ -95,6 +101,7 @@ void Parser::synchronize(void) {
     case TokenType::If:
     case TokenType::Unless:
     case TokenType::Return:
+    case TokenType::OpenCurlyBrase:
       return;
     default:
       break;
