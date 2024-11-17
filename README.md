@@ -62,6 +62,24 @@ make
     - [ ] Generics
     - [ ] Secret 🤫
 
+## Hello World
+```haste
+func main() {
+    # no working hello world yet :(
+    # but we got variables :D
+    let x = 5;
+    let mut y = 9;
+    y += 1;
+}
+```
+
+```haste
+# My desired hello world
+func main() {
+    @println("Hello World");
+}
+```
+
 ### Parsing `examples/parsing.haste` output
 
 ![alt text](imgs/image.png)
