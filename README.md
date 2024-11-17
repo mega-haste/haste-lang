@@ -60,7 +60,7 @@ make
     - [ ] tuples and multi dimentional arrays
     - [ ] Custom Defined types
     - [ ] Generics
-    - [ ] || Secret 🤫 ||
+    - [ ] Secret 🤫
 
 ### Parsing `examples/parsing.haste` output
 
