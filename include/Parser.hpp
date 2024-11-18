@@ -7,6 +7,7 @@
 #include "tokens.hpp"
 #include <cstddef>
 #include <initializer_list>
+#include <memory>
 
 using namespace AST;
 
@@ -23,18 +24,18 @@ public:
 
 class Parser {
 public:
-  Parser(TokenList tokens);
+  Parser(const TokenList &tokens);
 
-  TranslationUnit parse();
+  void parse(std::shared_ptr<TranslationUnit> tu);
 
 private:
   static inline Token f = Token(TokenType::Void, "void");
-  TokenList m_tokens;
+  const TokenList &m_tokens;
   std::size_t m_current = 0;
   bool m_had_error = false;
 
   Statement declaration(void);
-  void static_declaration(TranslationUnit &tu);
+  void static_declaration(std::shared_ptr<TranslationUnit> tu);
   Statement statement(void);
 
   std::unique_ptr<FunctionDef> function(void);

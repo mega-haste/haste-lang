@@ -4,6 +4,7 @@
 #include "Analysis/Symbol.hpp"
 #include "Analysis/SymbolTable.hpp"
 #include <deque>
+#include <filesystem>
 
 namespace Analysis {
 
@@ -22,6 +23,8 @@ public:
   int warnings_count = 0;
 
   std::string source_file = "main.haste";
+
+  Context(std::filesystem::path &source_file);
 
   bool is_declared(const std::string &key);
   bool is_defined(const std::string &key);

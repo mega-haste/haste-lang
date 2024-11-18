@@ -1,11 +1,15 @@
 #include "Analysis/Context.hpp"
 #include "Analysis/Symbol.hpp"
 #include <cstddef>
+#include <filesystem>
 #include <format>
 #include <iostream>
 #include <string>
 
-using namespace Analysis;
+namespace Analysis {
+
+Context::Context(std::filesystem::path &source_file)
+    : source_file(source_file) {}
 
 bool Context::is_declared(const std::string &key) {
   Symbol *symbol = symbol_table.local_first_look_up(key);
@@ -88,3 +92,5 @@ void Context::report_summary(void) const {
               << (warnings_count == 0 ? " warning" : " warnings") << " in "
               << source_file << "\n";
 }
+
+} // namespace Analysis

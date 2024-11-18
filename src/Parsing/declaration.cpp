@@ -19,11 +19,11 @@ Statement Parser::declaration(void) {
   return std::make_unique<NoneStmt>();
 }
 
-void Parser::static_declaration(TranslationUnit &tu) {
+void Parser::static_declaration(std::shared_ptr<TranslationUnit> tu) {
   try {
     if (match({TokenType::Func})) {
       auto v = function();
-      tu.add_function(std::move(v));
+      tu->add_function(std::move(v));
     } else {
       throw error(peek(),
                   "Only allowed `func`, `struct`, `import`, `const` and `use` "

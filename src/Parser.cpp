@@ -1,18 +1,21 @@
 #include "Parser.hpp"
+#include "TranslationUnit.hpp"
 #include "tokens.hpp"
 #include <cmath>
 #include <cstdlib>
+#include <filesystem>
 #include <iostream>
+#include <memory>
 
 using namespace AST;
 
 ParserError::ParserError(const Token &token, const char *message)
     : token(token), message(message) {}
 
-Parser::Parser(TokenList tokens) : m_tokens(tokens) {}
+Parser::Parser(const TokenList &tokens) : m_tokens(tokens) {}
 
-TranslationUnit Parser::parse() {
-  TranslationUnit tu;
+void Parser::parse(std::shared_ptr<TranslationUnit> tu) {
+  std::filesystem::path path = "main.haste";
 
   while (!is_at_end()) {
     static_declaration(tu);
@@ -21,7 +24,6 @@ TranslationUnit Parser::parse() {
   if (m_had_error) {
     std::exit(70);
   }
-  return tu;
 }
 
 const bool Parser::match(std::initializer_list<TokenType> types) {
