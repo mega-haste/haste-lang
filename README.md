@@ -4,25 +4,20 @@
 
 ## How to try haste?
 
-1. you got to install the repo first and navigate to where you clone the repo
+1. You've got to install the repo first and navigate to where you clone the repo
 
 ```sh
 git clone https://github.com/mega-haste/haste-lang
 $ cd haste-lang
 ```
 
-2. You should be already installed cmake and run this command
+2. You should be already installed (premake)[https://premake.github.io/] in order to run this command
 
 ```sh
-cmake -S . -G "Unix Makefiles" -B build
+premake5 gmake --cc=clang
 ```
 
-3. Finally you can run haste (as a test)
-
-```sh
-make
-./haste-test
-```
+> NOTE: Since i switched to premake testing the scanner isn't avialable yet cuz I'm too lazy to do that
 
 ## Language progress
 
