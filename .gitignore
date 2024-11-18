@@ -5,3 +5,4 @@ Release/
 cmake/
 bin/
 .vscode/
+CMakeLists.txt
