@@ -4,18 +4,21 @@
 #include <cctype>
 #include <cstddef>
 #include <cstdio>
+#include <filesystem>
 #include <iostream>
+#include <ostream>
 #include <string>
 #include <vector>
 
-Scanner::Scanner() : m_content("") { setup_keywords(); }
-Scanner::Scanner(std::string content) : m_content(content) { setup_keywords(); }
+Scanner::Scanner() : m_current_line("") { setup_keywords(); }
+Scanner::Scanner(std::filesystem::path &path) : m_source_file(path) {
+  setup_keywords();
+}
 
 void Scanner::reconstruct(std::string content) {
-  m_content = content;
+  m_current_line = content;
   m_current = 0;
   m_start = 0;
-  m_line = 1;
   m_column = 1;
   m_tokens.clear();
 }
@@ -55,6 +58,19 @@ void Scanner::setup_keywords() {
 }
 
 TokenList Scanner::scan() {
+  while (std::getline(m_source_file, m_current_line)) {
+    LOG(m_current_line);
+    scan_line();
+    m_line++;
+    m_column = 1;
+    m_current = 0;
+    m_start = 0;
+  }
+  add_token(TokenType::_EOF);
+  return m_tokens;
+}
+
+TokenList Scanner::scan_line(void) {
   while (!at_end()) {
     m_start = m_current;
     char c = advance();
@@ -148,15 +164,11 @@ TokenList Scanner::scan() {
       break;
 
     case '#':
-      while (!is('\n'))
+      while (!at_end())
         advance();
       break;
 
     case '\n':
-      m_line++;
-      m_column = 1;
-      break;
-
     case ' ':
     case '\t':
     case '\r':
@@ -175,8 +187,6 @@ TokenList Scanner::scan() {
       break;
     }
   }
-
-  add_token(TokenType::_EOF);
   return m_tokens;
 }
 
@@ -189,7 +199,7 @@ void Scanner::scan_ident() {
   while (is_alphanum())
     advance();
 
-  std::string buffer = m_content.substr(m_start, m_current - m_start);
+  std::string buffer = m_current_line.substr(m_start, m_current - m_start);
   if (keywords.contains(buffer)) {
     add_token(keywords[buffer]);
     return;
@@ -202,7 +212,8 @@ void Scanner::scan_special() {
     advance();
   advance();
 
-  std::string buffer = m_content.substr(m_start + 2, m_current - m_start - 3);
+  std::string buffer =
+      m_current_line.substr(m_start + 2, m_current - m_start - 3);
   add_token(TokenType::SpicialIdentifier, buffer);
 }
 
@@ -218,7 +229,7 @@ void Scanner::scan_numbers() {
       advance();
   }
 
-  std::string buffer = m_content.substr(m_start, m_current - m_start);
+  std::string buffer = m_current_line.substr(m_start, m_current - m_start);
   add_token(type, buffer);
 }
 
@@ -229,13 +240,14 @@ void Scanner::scan_string() {
   }
   advance();
 
-  std::string buffer = m_content.substr(m_start, m_current - m_start);
+  std::string buffer = m_current_line.substr(m_start, m_current - m_start);
   add_token(TokenType::StringLit, buffer);
 }
 
 void Scanner::add_token(TokenType type) {
-  add_token(type, m_content.substr(m_start, m_current - m_start));
+  add_token(type, m_current_line.substr(m_start, m_current - m_start));
 }
+
 void Scanner::add_token(TokenType type, std::string value) {
   m_tokens.push_back(Token(type, value, m_line, m_column));
   m_column += value.size();
@@ -248,13 +260,13 @@ bool Scanner::is(char c) { return peek() == c; }
 char Scanner::peek() {
   if (at_end())
     return '\0';
-  return m_content[m_current];
+  return m_current_line[m_current];
 }
 
 char Scanner::peek(int i) {
   if (at_end(m_current + i))
     return '\0';
-  return m_content[m_current + i];
+  return m_current_line[m_current + i];
 }
 
 bool Scanner::is_alpha() {
@@ -285,28 +297,28 @@ bool Scanner::is_alphanum(char c) { return is_alpha(c) || is_digit(c); }
 bool Scanner::match(char a) {
   if (at_end())
     return false;
-  if (m_content[m_current] != a)
+  if (m_current_line[m_current] != a)
     return false;
 
   m_current++;
   return true;
 }
 
-bool Scanner::at_end() { return m_current >= m_content.length(); }
+bool Scanner::at_end() { return m_current >= m_current_line.length(); }
 
-bool Scanner::at_end(std::size_t i) { return i >= m_content.length(); }
+bool Scanner::at_end(std::size_t i) { return i >= m_current_line.length(); }
 
-char Scanner::advance() { return m_content[m_current++]; }
+char Scanner::advance() { return m_current_line[m_current++]; }
 
 char Scanner::advance(std::size_t i) {
   m_current += i;
-  return m_content[m_current - 1];
+  return m_current_line[m_current - 1];
 }
 
 Scanner::Ident Scanner::get_next_ident() {
   std::size_t current = m_current;
   std::string buffer = "";
-#define pk m_content[current]
+#define pk m_current_line[current]
   while ((!at_end(current)) && is_alphanum(pk)) {
     buffer.push_back(pk);
     current++;

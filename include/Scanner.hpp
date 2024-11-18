@@ -2,6 +2,8 @@
 
 #include "tokens.hpp"
 #include <cstddef>
+#include <filesystem>
+#include <fstream>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -10,9 +12,10 @@
 class Scanner {
 public:
   Scanner();
-  Scanner(std::string content);
+  Scanner(std::filesystem::path &path);
 
-  TokenList scan();
+  TokenList scan(void);
+  TokenList scan_line(void);
   void reconstruct(std::string content);
 
   static void setup_keywords();
@@ -38,9 +41,10 @@ private:
 
   inline static std::unordered_map<std::string, TokenType> keywords =
       std::unordered_map<std::string, TokenType>();
-  std::string m_content;
+  std::ifstream m_source_file = std::ifstream("");
   std::size_t m_current = 0;
   std::size_t m_start = 0;
+  std::string m_current_line = "";
   std::size_t m_line = 1;
   std::size_t m_column = 1;
   std::vector<Token> m_tokens;

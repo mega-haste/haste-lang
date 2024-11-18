@@ -1,6 +1,0 @@
-func add(x: float, y: float): float
-  = x + y;
-
-func main(argc: uint) { # Expected a warning
-  let mut a: auto = 5; # Expected a warning
-}

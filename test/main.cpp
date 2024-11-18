@@ -8,13 +8,13 @@ static Scanner scanner;
 #define S(content)                                                             \
   scanner.reconstruct(content);                                                \
   std::size_t _i = 0;                                                          \
-  TokenList tokens = scanner.scan()
+  TokenList tokens = scanner.scan_line()
 #define EXPECT_TOKEN(token) EXPECT_EQ(tokens[_i++], TokenType::token)
 
 TEST(ScannerTest, Parenthesis) {
   S("}{ ][ )(");
 
-  EXPECT_EQ(tokens.size(), 7);
+  EXPECT_EQ(tokens.size(), 6);
 
   EXPECT_EQ(tokens[0], TokenType::CloseCurlyBrase);
   EXPECT_EQ(tokens[1], TokenType::OpenCurlyBrase);
@@ -27,7 +27,7 @@ TEST(ScannerTest, Parenthesis) {
 TEST(ScannerTest, MathematicalOperators) {
   S("+ * ** / - \\");
 
-  EXPECT_EQ(tokens.size(), 7);
+  EXPECT_EQ(tokens.size(), 6);
 
   EXPECT_TOKEN(Plus);
   EXPECT_TOKEN(Star);
@@ -40,7 +40,7 @@ TEST(ScannerTest, MathematicalOperators) {
 TEST(ScannerTest, ComparaisonOperator) {
   S("= == != < > <= >=");
 
-  EXPECT_EQ(tokens.size(), 8);
+  EXPECT_EQ(tokens.size(), 7);
 
   EXPECT_TOKEN(Eq);
   EXPECT_TOKEN(EqEq);
@@ -54,7 +54,7 @@ TEST(ScannerTest, ComparaisonOperator) {
 TEST(ScannerTest, AssignmentOperators) {
   S("= += -= *= **= /= %=");
 
-  EXPECT_EQ(tokens.size(), 8);
+  EXPECT_EQ(tokens.size(), 7);
 
   EXPECT_TOKEN(Eq);
   EXPECT_TOKEN(PlusEq);
@@ -68,7 +68,7 @@ TEST(ScannerTest, AssignmentOperators) {
 TEST(ScannerTest, LogicOperator) {
   S("not and or");
 
-  EXPECT_EQ(tokens.size(), 4);
+  EXPECT_EQ(tokens.size(), 3);
 
   EXPECT_TOKEN(Not);
   EXPECT_TOKEN(And);
@@ -78,7 +78,7 @@ TEST(ScannerTest, LogicOperator) {
 TEST(ScannerTest, BitwiseOpertor) {
   S("& | ~ << >>");
 
-  EXPECT_EQ(tokens.size(), 6);
+  EXPECT_EQ(tokens.size(), 5);
 
   EXPECT_TOKEN(BitwiseAnd);
   EXPECT_TOKEN(BitwiseOr);
@@ -90,7 +90,7 @@ TEST(ScannerTest, BitwiseOpertor) {
 TEST(ScannerTest, IDK) {
   S(". ; : , ::");
 
-  EXPECT_EQ(tokens.size(), 6);
+  EXPECT_EQ(tokens.size(), 5);
 
   EXPECT_TOKEN(Dot);
   EXPECT_TOKEN(SemiColon);
@@ -102,7 +102,7 @@ TEST(ScannerTest, IDK) {
 TEST(ScannerTest, LitteralInt) {
   S("05488 123456789");
 
-  EXPECT_EQ(tokens.size(), 3);
+  EXPECT_EQ(tokens.size(), 2);
 
   EXPECT_TOKEN(IntLit);
   EXPECT_TOKEN(IntLit);
@@ -114,7 +114,7 @@ TEST(ScannerTest, LitteralInt) {
 TEST(ScannerTest, LitteralFloat) {
   S("0.123456789 123456789.123456789f");
 
-  EXPECT_EQ(tokens.size(), 3);
+  EXPECT_EQ(tokens.size(), 2);
 
   EXPECT_TOKEN(FloatLit);
   EXPECT_TOKEN(FloatLit);
@@ -128,7 +128,7 @@ TEST(ScannerTest, LitteralComplex) {}
 TEST(ScannerTest, LitteralString) {
   S("\"Hello World!!!   \" \"dffd\n\"");
 
-  EXPECT_EQ(tokens.size(), 3);
+  EXPECT_EQ(tokens.size(), 2);
 
   EXPECT_TOKEN(StringLit);
   EXPECT_TOKEN(StringLit);
@@ -142,7 +142,7 @@ TEST(ScannerTest, LitteralChar) {}
 TEST(ScannerTest, Identifier) {
   S("name m_name $func name2");
 
-  EXPECT_EQ(tokens.size(), 5);
+  EXPECT_EQ(tokens.size(), 4);
 
   EXPECT_TOKEN(Identifier);
   EXPECT_TOKEN(Identifier);
@@ -158,7 +158,7 @@ TEST(ScannerTest, Identifier) {
 TEST(ScannerTest, SpicialIdentifier) {
   S("  $\"this is a special identifier\"");
 
-  EXPECT_EQ(tokens.size(), 2);
+  EXPECT_EQ(tokens.size(), 1);
 
   EXPECT_TOKEN(SpicialIdentifier);
 
@@ -194,7 +194,7 @@ TEST(ScannerTest, KeyWords) {
     "char");
 
   // Create the expected token list based on the enum definitions and comments
-  EXPECT_EQ(tokens.size(), 26);
+  EXPECT_EQ(tokens.size(), 25);
 
   // Check that each token matches the expected token type
   EXPECT_TOKEN(Let);
