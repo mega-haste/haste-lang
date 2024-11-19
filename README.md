@@ -4,15 +4,13 @@
 
 ## How to try haste?
 
-1. You've got to install the repo first and navigate to where you clone the repo
-
+1. You got to clone this repo and navigate to where you cloned it
 ```sh
 git clone https://github.com/mega-haste/haste-lang
-$ cd haste-lang
+cd haste-lang
 ```
 
 2. You should be already installed [premake](https://premake.github.io/) in order to run this command
-
 ```sh
 premake5 gmake --cc=clang
 ```
