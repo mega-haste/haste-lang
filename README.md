@@ -19,6 +19,24 @@ premake5 gmake --cc=clang
 
 > NOTE: Since i switched to premake testing the scanner isn't avialable yet cuz I'm too lazy to do that
 
+3. Now go to `build/` folder and run make
+```sh
+cd build/
+make
+```
+
+4. Now create a `main.haste` file inside `build/`
+```sh
+touch main.haste
+```
+
+5. Edite `main.haste` file you created earlier and add these folowing lines
+```haste
+func main() {
+    let a: int = 50; # Expected warning
+}
+```
+
 ## Language progress
 
 - [x] Scanner
@@ -50,7 +68,7 @@ premake5 gmake --cc=clang
     - [ ] functions (needs to add generecs to it)
   - [ ] Semantic Analysis
     - [x] Added basic types (arrays, functions, native types eg. bool, int, uint, char, string)
-    - [-] Working immutability
+- [-] Working immutability
     - [ ] Function calls
     - [ ] Subscripting
     - [ ] Member accessing
