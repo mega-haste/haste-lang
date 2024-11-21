@@ -3,7 +3,7 @@
 
 #include "AST/Expressions.hpp"
 #include "AST/Statments.hpp"
-#include "TranslationUnit.hpp"
+#include "Program.hpp"
 #include "tokens.hpp"
 #include <cstddef>
 #include <initializer_list>
@@ -26,7 +26,7 @@ class Parser {
 public:
   Parser(const TokenList &tokens);
 
-  void parse(std::shared_ptr<TranslationUnit> tu);
+  void parse(Program &program);
 
 private:
   static inline Token f = Token(TokenType::Void, "void");
@@ -35,7 +35,7 @@ private:
   bool m_had_error = false;
 
   Statement declaration(void);
-  void static_declaration(std::shared_ptr<TranslationUnit> tu);
+  void static_declaration(Program &program);
   Statement statement(void);
 
   std::unique_ptr<FunctionDef> function(void);
@@ -73,9 +73,9 @@ private:
 
   Expression parse_tuple(std::vector<Expression> &&exprs);
 
-  const bool match(std::initializer_list<TokenType> types);
-  const bool check(TokenType type) const;
-  const bool is_at_end(void) const;
+  bool match(std::initializer_list<TokenType> types);
+  bool check(TokenType type) const;
+  bool is_at_end(void) const;
 
   const Token &consume_semi_colon(const char *message);
   const Token &consume_identifier(const char *message);

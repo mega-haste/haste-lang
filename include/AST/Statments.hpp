@@ -22,14 +22,14 @@ using Analysis::SymbolType;
 
 class StatementNode {
 public:
-  virtual const std::string prettify(const int depth = 0) const = 0;
+  virtual std::string prettify(const int depth = 0) const = 0;
   virtual void analyse(Analysis::Context &ctx) const;
 
   virtual ~StatementNode() = default;
 };
 
 class NoneStmt : public StatementNode {
-  const std::string prettify(const int depth = 0) const override;
+  std::string prettify(const int depth = 0) const override;
 };
 
 class BlockStatement : public StatementNode {
@@ -37,7 +37,7 @@ public:
   std::vector<Statement> statements;
 
   explicit BlockStatement(std::vector<Statement> statements);
-  const std::string prettify(const int depth = 0) const override;
+  std::string prettify(const int depth = 0) const override;
   void analyse(Analysis::Context &ctx) const override;
 };
 
@@ -46,7 +46,7 @@ public:
   Expression expr;
 
   explicit ExpressionStatement(Expression expr);
-  const std::string prettify(const int depth = 0) const override;
+  std::string prettify(const int depth = 0) const override;
   void analyse(Analysis::Context &ctx) const override;
 };
 
@@ -57,9 +57,10 @@ public:
   Type return_type;
   Statement body;
 
-  FunctionDef(const Token &identifier, std::vector<TypedIdentifier> arguments,
-              Type &&return_type, Statement &&body);
-  const std::string prettify(const int depth = 0) const override;
+  explicit FunctionDef(const Token &identifier,
+                       std::vector<TypedIdentifier> arguments,
+                       Type &&return_type, Statement &&body);
+  std::string prettify(const int depth = 0) const override;
   void analyse(Analysis::Context &ctx) const override;
 };
 
@@ -72,7 +73,7 @@ public:
 
   explicit LetDef(const Token &ident, std::optional<Expression> &&value,
                   std::optional<Type> &&type, bool mut);
-  const std::string prettify(const int depth = 0) const override;
+  std::string prettify(const int depth = 0) const override;
   void analyse(Analysis::Context &ctx) const override;
 };
 
@@ -84,7 +85,7 @@ public:
 
   explicit IfStatement(Expression &&condition, Statement &&then,
                        std::optional<Statement> &&otherwise);
-  const std::string prettify(const int depth = 0) const override;
+  std::string prettify(const int depth = 0) const override;
   void analyse(Analysis::Context &ctx) const override;
 };
 
@@ -93,7 +94,7 @@ public:
   std::optional<Expression> expr;
 
   explicit ReturnStatement(std::optional<Expression> &&expr);
-  const std::string prettify(const int depth = 0) const override;
+  std::string prettify(const int depth = 0) const override;
   void analyse(Analysis::Context &ctx) const override;
 };
 

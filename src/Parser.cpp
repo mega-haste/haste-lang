@@ -1,11 +1,9 @@
 #include "Parser.hpp"
-#include "TranslationUnit.hpp"
 #include "tokens.hpp"
 #include <cmath>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
-#include <memory>
 
 using namespace AST;
 
@@ -14,11 +12,11 @@ ParserError::ParserError(const Token &token, const char *message)
 
 Parser::Parser(const TokenList &tokens) : m_tokens(tokens) {}
 
-void Parser::parse(std::shared_ptr<TranslationUnit> tu) {
+void Parser::parse(Program &program) {
   std::filesystem::path path = "main.haste";
 
   while (!is_at_end()) {
-    static_declaration(tu);
+    static_declaration(program);
   }
 
   if (m_had_error) {
@@ -26,7 +24,7 @@ void Parser::parse(std::shared_ptr<TranslationUnit> tu) {
   }
 }
 
-const bool Parser::match(std::initializer_list<TokenType> types) {
+bool Parser::match(std::initializer_list<TokenType> types) {
   for (TokenType type : types) {
     if (check(type)) {
       advance();
@@ -36,7 +34,7 @@ const bool Parser::match(std::initializer_list<TokenType> types) {
   return false;
 }
 
-const bool Parser::check(TokenType type) const {
+bool Parser::check(TokenType type) const {
   return is_at_end() ? false : peek() == type;
 }
 
@@ -47,7 +45,7 @@ const Token &Parser::consume(TokenType type, const char *message) {
   throw error(peek(), message);
 }
 
-const bool Parser::is_at_end(void) const { return peek() == TokenType::_EOF; }
+bool Parser::is_at_end(void) const { return peek() == TokenType::_EOF; }
 
 const Token &Parser::consume_semi_colon(const char *message) {
   return consume(TokenType::SemiColon, message);

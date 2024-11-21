@@ -3,7 +3,6 @@
 #include "Analysis/Symbol.hpp"
 #include "tokens.hpp"
 #include <format>
-#include <macros.hpp>
 #include <memory>
 #include <optional>
 #include <string>

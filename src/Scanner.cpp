@@ -1,4 +1,4 @@
-#include "macros.hpp"
+#include "common.hpp"
 #include "tokens.hpp"
 #include <Scanner.hpp>
 #include <cctype>
@@ -253,7 +253,10 @@ void Scanner::add_token(TokenType type, std::string value) {
   m_column += value.size();
 }
 
-bool Scanner::ident_match(std::string ident) { UNIMPLEMENTED("ident_match"); }
+bool Scanner::ident_match(std::string ident) {
+  UNUSED(ident);
+  UNIMPLEMENTED("ident_match");
+}
 
 bool Scanner::is(char c) { return peek() == c; }
 

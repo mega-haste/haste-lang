@@ -2,6 +2,11 @@
 
 #include <iostream>
 
+#define UNUSED(expr)                                                           \
+  do {                                                                         \
+    (void)(expr);                                                              \
+  } while (0)
+
 #define LOG(msg) std::cout << "LOG: " << msg << '\n';
 #define UNIMPLEMENTED(tag)                                                     \
   std::cout << "Unimplemented: " << tag << std::endl;                          \

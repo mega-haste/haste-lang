@@ -1,7 +1,6 @@
 #include "Compiler.hpp"
 #include "Parser.hpp"
 #include "TranslationUnit.hpp"
-#include "macros.hpp"
 #include "tokens.hpp"
 #include <memory>
 #include <string>
@@ -11,12 +10,12 @@ void Compiler::compile(std::filesystem::path path) {
   tu->do_scan();
 
   const TokenList &tokens = tu->get_tokens();
-  for (auto &token : tokens) {
-    LOG(token.to_string());
-  }
+  // for (auto &token : tokens) {
+  //   LOG(token.to_string());
+  // }
 
   Parser parser(tokens);
-  parser.parse(tu);
+  parser.parse(tu->program);
 }
 
 void Compiler::analyse_all() {

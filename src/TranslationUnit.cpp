@@ -8,18 +8,8 @@ TranslationUnit::TranslationUnit(std::filesystem::path &path)
 
 void TranslationUnit::do_scan() { m_tokens = m_scanner.scan(); }
 
-void TranslationUnit::add_function(std::unique_ptr<AST::FunctionDef> func) {
-  functions.push_back(std::move(func));
-}
-
-void TranslationUnit::pretty_print(void) const {
-  for (auto &function : functions) {
-    std::cout << function->prettify() << '\n';
-  }
-}
-
 void TranslationUnit::analyse() {
-  for (auto &fn : functions) {
+  for (auto &fn : program.functions) {
     fn->analyse(ctx);
   }
 

@@ -2,7 +2,7 @@
 #include "AST/Statments.hpp"
 #include "Analysis/Context.hpp"
 #include "Analysis/Symbol.hpp"
-#include "macros.hpp"
+#include "common.hpp"
 #include "tokens.hpp"
 #include <cmath>
 #include <cstdio>
@@ -25,13 +25,16 @@ std::string repeat_char(char c, int times) {
   return s;
 }
 
-void StatementNode::analyse(Analysis::Context &ctx) const {};
+void StatementNode::analyse(Analysis::Context &ctx) const { UNUSED(ctx); };
 
-const std::string NoneStmt::prettify(const int depth) const { return "None"; }
+std::string NoneStmt::prettify(const int depth) const {
+  UNUSED(depth);
+  return "None";
+}
 
 BlockStatement::BlockStatement(std::vector<Statement> statements)
     : statements(std::move(statements)) {}
-const std::string BlockStatement::prettify(const int depth) const {
+std::string BlockStatement::prettify(const int depth) const {
   std::string body_str;
   for (auto &b : statements) {
     body_str.push_back('\n');
@@ -51,7 +54,7 @@ void BlockStatement::analyse(Analysis::Context &ctx) const {
 
 ExpressionStatement::ExpressionStatement(Expression expr)
     : expr(std::move(expr)) {}
-const std::string ExpressionStatement::prettify(const int depth) const {
+std::string ExpressionStatement::prettify(const int depth) const {
   return std::format("{}(expr {})", repeat_char(' ', depth), expr->prettify());
 }
 void ExpressionStatement::analyse(Analysis::Context &ctx) const {
@@ -63,7 +66,7 @@ FunctionDef::FunctionDef(const Token &identifier,
                          Type &&return_type, Statement &&body)
     : identifier(identifier), arguments(std::move(arguments)),
       return_type(std::move(return_type)), body(std::move(body)) {}
-const std::string FunctionDef::prettify(const int depth) const {
+std::string FunctionDef::prettify(const int depth) const {
   std::string args;
   std::string body_str;
   for (auto &arg : arguments) {
@@ -105,7 +108,7 @@ void FunctionDef::analyse(Analysis::Context &ctx) const {
 LetDef::LetDef(const Token &ident, std::optional<Expression> &&value,
                std::optional<Type> &&type, bool mut)
     : ident(ident), value(std::move(value)), type(std::move(type)), mut(mut) {}
-const std::string LetDef::prettify(const int depth) const {
+std::string LetDef::prettify(const int depth) const {
   return std::format(
       "{}(let_dec name:{} mut:{} type:{} value:{})", repeat_char(' ', depth),
       ident.value, mut, type.has_value() ? type.value()->prettify() : "unset",
@@ -129,6 +132,8 @@ void LetDef::analyse(Analysis::Context &ctx) const {
                        "variable, or explicitly set the type of the variable.");
       return;
     }
+    if (value.has_value())
+      value.value()->analyse(ctx);
     ctx.define(ident.value, std::move(expected_type), mut);
     return;
   }
@@ -156,7 +161,7 @@ IfStatement::IfStatement(Expression &&condition, Statement &&then,
                          std::optional<Statement> &&otherwise)
     : condition(std::move(condition)), then(std::move(then)),
       otherwise(std::move(otherwise)) {}
-const std::string IfStatement::prettify(const int depth) const {
+std::string IfStatement::prettify(const int depth) const {
   return std::format("{}(if ({}) {} else {})", repeat_char(' ', depth),
                      condition->prettify(), then->prettify(depth),
                      otherwise.has_value() ? otherwise.value()->prettify(depth)
@@ -175,7 +180,7 @@ void IfStatement::analyse(Analysis::Context &ctx) const {
 
 ReturnStatement::ReturnStatement(std::optional<Expression> &&expr)
     : expr(std::move(expr)) {}
-const std::string ReturnStatement::prettify(const int depth) const {
+std::string ReturnStatement::prettify(const int depth) const {
   return std::format("{}(return {})", repeat_char(' ', depth),
                      expr.has_value() ? expr.value()->prettify() : "NONE");
 }

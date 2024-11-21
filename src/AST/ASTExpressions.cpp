@@ -1,11 +1,11 @@
 #include "AST/Expressions.hpp"
 #include "Analysis/Symbol.hpp"
-#include "macros.hpp"
+#include "common.hpp"
 #include "tokens.hpp"
 #include <cmath>
+#include <cstddef>
 #include <cstdlib>
 #include <format>
-#include <memory>
 #include <string>
 
 namespace AST {
@@ -13,15 +13,16 @@ using Analysis::NativeType;
 using Analysis::SymbolHandler;
 using Analysis::SymbolType;
 
-const void ExpressionNode::analyse(Analysis::Context &ctx) const {};
+void ExpressionNode::analyse(Analysis::Context &ctx) const { UNUSED(ctx); };
 
-const std::string ExpressionNone::prettify() const { return "(NONE)"; }
+std::string ExpressionNone::prettify() const { return "(NONE)"; }
 SymbolType ExpressionNone::get_type(Analysis::Context &ctx) const {
+  UNUSED(ctx);
   return Analysis::NativeType::Unknown;
 }
 
 LiteralExpression::LiteralExpression(const Token &v) : value(v) {}
-const std::string LiteralExpression::prettify(void) const {
+std::string LiteralExpression::prettify(void) const {
   switch (value.type) {
   case TokenType::CharLit:
     return std::format("(char \'{}\')", value.value);
@@ -36,6 +37,7 @@ const std::string LiteralExpression::prettify(void) const {
   }
 }
 SymbolType LiteralExpression::get_type(Analysis::Context &ctx) const {
+  UNUSED(ctx);
   switch (value.type) {
   case TokenType::CharLit:
     return NativeType::Char;
@@ -51,22 +53,23 @@ SymbolType LiteralExpression::get_type(Analysis::Context &ctx) const {
 }
 
 BooleanExpression::BooleanExpression(bool v) : value(v) {}
-const std::string BooleanExpression::prettify(void) const {
+std::string BooleanExpression::prettify(void) const {
   return value ? "(bool true)" : "(bool false)";
 }
 SymbolType BooleanExpression::get_type(Analysis::Context &ctx) const {
+  UNUSED(ctx);
   return NativeType::Bool;
 }
 
 UnaryExpression::UnaryExpression(const Token &op, Expression &&rhs)
     : op(op), rhs(std::move(rhs)) {}
-const std::string UnaryExpression::prettify(void) const {
+std::string UnaryExpression::prettify(void) const {
   return std::format("(unary {} {})", op.value, rhs->prettify());
 }
 SymbolType UnaryExpression::get_type(Analysis::Context &ctx) const {
   return Analysis::do_unary(op, rhs->get_type(ctx));
 }
-const void UnaryExpression::analyse(Analysis::Context &ctx) const {
+void UnaryExpression::analyse(Analysis::Context &ctx) const {
   // TODO
   rhs->analyse(ctx);
 }
@@ -74,14 +77,14 @@ const void UnaryExpression::analyse(Analysis::Context &ctx) const {
 BinaryExpression::BinaryExpression(Expression &&lhs, const Token &op,
                                    Expression &&rhs)
     : lhs(std::move(lhs)), op(op), rhs(std::move(rhs)) {}
-const std::string BinaryExpression::prettify(void) const {
+std::string BinaryExpression::prettify(void) const {
   return std::format("(binary {} {} {})", lhs->prettify(), op.value,
                      rhs->prettify());
 }
 SymbolType BinaryExpression::get_type(Analysis::Context &ctx) const {
   return Analysis::do_binary(lhs->get_type(ctx), op, rhs->get_type(ctx));
 }
-const void BinaryExpression::analyse(Analysis::Context &ctx) const {
+void BinaryExpression::analyse(Analysis::Context &ctx) const {
   // TODO
   lhs->analyse(ctx);
   rhs->analyse(ctx);
@@ -89,13 +92,13 @@ const void BinaryExpression::analyse(Analysis::Context &ctx) const {
 
 GroupingExpression::GroupingExpression(Expression &&expr)
     : expr(std::move(expr)) {}
-const std::string GroupingExpression::prettify(void) const {
+std::string GroupingExpression::prettify(void) const {
   return std::format("(grouping {})", expr->prettify());
 }
 SymbolType GroupingExpression::get_type(Analysis::Context &ctx) const {
   return expr->get_type(ctx);
 }
-const void GroupingExpression::analyse(Analysis::Context &ctx) const {
+void GroupingExpression::analyse(Analysis::Context &ctx) const {
   // TODO
   expr->analyse(ctx);
 }
@@ -104,14 +107,14 @@ InlineIf::InlineIf(Expression &&condition, Expression &&consequent,
                    Expression &&alternate)
     : condition(std::move(condition)), consequent(std::move(consequent)),
       alternate(std::move(alternate)) {}
-const std::string InlineIf::prettify(void) const {
+std::string InlineIf::prettify(void) const {
   return std::format("(if {} then {} else {})", condition->prettify(),
                      consequent->prettify(), alternate->prettify());
 }
 SymbolType InlineIf::get_type(Analysis::Context &ctx) const {
   return consequent->get_type(ctx);
 }
-const void InlineIf::analyse(Analysis::Context &ctx) const {
+void InlineIf::analyse(Analysis::Context &ctx) const {
   SymbolType condition_type = condition->get_type(ctx);
   if (!Analysis::is_bool(condition_type)) {
     UNIMPLEMENTED("InlineIf analysis (condition checking)");
@@ -122,18 +125,17 @@ const void InlineIf::analyse(Analysis::Context &ctx) const {
 
 AsExpression::AsExpression(Expression &&expr, Type &&type)
     : expr(std::move(expr)), type(std::move(type)) {}
-const std::string AsExpression::prettify(void) const {
+std::string AsExpression::prettify(void) const {
   return std::format("(as {} {})", expr->prettify(), type->prettify());
 }
 SymbolType AsExpression::get_type(Analysis::Context &ctx) const {
+  UNUSED(ctx);
   return type->get_type();
 }
-const void AsExpression::analyse(Analysis::Context &ctx) const {
-  expr->analyse(ctx);
-}
+void AsExpression::analyse(Analysis::Context &ctx) const { expr->analyse(ctx); }
 
 IdentifierExpression::IdentifierExpression(const Token &v) : value(v) {}
-const std::string IdentifierExpression::prettify(void) const {
+std::string IdentifierExpression::prettify(void) const {
   switch (value.type) {
   case TokenType::Identifier:
     return std::format("(ident {})", value.value);
@@ -152,7 +154,7 @@ SymbolType IdentifierExpression::get_type(Analysis::Context &ctx) const {
   }
   return NativeType::Unknown;
 }
-const void IdentifierExpression::analyse(Analysis::Context &ctx) const {
+void IdentifierExpression::analyse(Analysis::Context &ctx) const {
   if (ctx.is_defined(value.value)) {
     Analysis::Symbol *symbol =
         ctx.symbol_table.local_first_look_up(value.value);
@@ -165,7 +167,7 @@ CallExpression::CallExpression(Expression &&callee, const Token &paren,
                                std::vector<Expression> arguments)
     : callee(std::move(callee)), paren(paren), arguments(std::move(arguments)) {
 }
-const std::string CallExpression::prettify(void) const {
+std::string CallExpression::prettify(void) const {
   std::string arg_str;
   for (auto &argument : arguments) {
     arg_str.append(argument->prettify());
@@ -178,18 +180,53 @@ const std::string CallExpression::prettify(void) const {
 
   return std::format("(call {}({}))", callee->prettify(), arg_str);
 }
+
 SymbolType CallExpression::get_type(Analysis::Context &ctx) const {
-  UNIMPLEMENTED("CallExpression");
+  SymbolType callee_symbol = callee->get_type(ctx);
+  if (Analysis::is_function(callee_symbol)) {
+    Analysis::SymbolFunctionType &callee_as_func_type =
+        std::get<Analysis::SymbolFunctionType>(callee_symbol);
+    return *callee_as_func_type.return_type;
+  }
+  return NativeType::Unknown;
+}
+
+void CallExpression::analyse(Analysis::Context &ctx) const {
+  callee->analyse(ctx);
+  SymbolType callee_type = callee->get_type(ctx);
+  if (!Analysis::is_function(callee_type)) {
+    ctx.report_error(paren, "Type Error", "Should be a function type.");
+    return;
+  }
+  Analysis::SymbolFunctionType &callee_func =
+      std::get<Analysis::SymbolFunctionType>(callee_type);
+  if (arguments.size() != callee_func.args.size()) {
+    ctx.report_error(paren, "Argument Error",
+                     "The Argument size didn't match what's given.");
+    return;
+  }
+  for (std::size_t i = 0; i < arguments.size(); i++) {
+    auto &argument = arguments[i];
+
+    argument->analyse(ctx);
+    SymbolType argument_type = argument->get_type(ctx);
+    auto &target_arg_type = callee_func.args[i];
+    if (!Analysis::match(argument_type, *target_arg_type.type)) {
+      ctx.report_error(paren, "Argument Error",
+                       "An arg didn't matched the type.");
+    }
+  }
 }
 
 MemberAccessExpression::MemberAccessExpression(Expression &&group,
                                                const Token &dot,
                                                const Token &member)
     : group(std::move(group)), dot(dot), member(std::move(member)) {}
-const std::string MemberAccessExpression::prettify(void) const {
+std::string MemberAccessExpression::prettify(void) const {
   return std::format("(access {} {})", group->prettify(), member.value);
 }
 SymbolType MemberAccessExpression::get_type(Analysis::Context &ctx) const {
+  UNUSED(ctx);
   UNIMPLEMENTED("MemberAccessExpression");
 }
 
@@ -199,17 +236,18 @@ SubscriptingExpression::SubscriptingExpression(Expression &&item,
                                                Expression &&index)
     : item(std::move(item)), open_brackets(open_brackets),
       close_brackets(close_brackets), index(std::move(index)) {}
-const std::string SubscriptingExpression::prettify(void) const {
+std::string SubscriptingExpression::prettify(void) const {
   return std::format("(subscript {} {})", item->prettify(), index->prettify());
 }
 SymbolType SubscriptingExpression::get_type(Analysis::Context &ctx) const {
+  UNUSED(ctx);
   UNIMPLEMENTED("SubscriptingExpression");
 }
 
 TupleExpression::TupleExpression(std::vector<Expression> &&elements,
                                  const Token &closing_parentheses)
     : elements(std::move(elements)), closing_parentheses(closing_parentheses) {}
-const std::string TupleExpression::prettify(void) const {
+std::string TupleExpression::prettify(void) const {
   std::string ele_str;
 
   for (auto &e : elements) {
@@ -224,6 +262,7 @@ const std::string TupleExpression::prettify(void) const {
   return std::format("(tuple ({}))", ele_str);
 }
 SymbolType TupleExpression::get_type(Analysis::Context &ctx) const {
+  UNUSED(ctx);
   UNIMPLEMENTED("Tuple");
 }
 
@@ -231,11 +270,12 @@ ScopeResolutionExpression::ScopeResolutionExpression(Expression &&group,
                                                      const Token &colon,
                                                      const Token &member)
     : group(std::move(group)), colon(colon), member(member) {}
-const std::string ScopeResolutionExpression::prettify(void) const {
+std::string ScopeResolutionExpression::prettify(void) const {
   return std::format("(scope_resolution {} {})", group->prettify(),
                      member.value);
 }
 SymbolType ScopeResolutionExpression::get_type(Analysis::Context &ctx) const {
+  UNUSED(ctx);
   UNIMPLEMENTED("ScopeResolutionExpression");
 }
 
@@ -243,14 +283,14 @@ AssignExpression::AssignExpression(Expression &&lhs, const Token &eq,
                                    Expression &&value)
     : lhs(std::move(lhs)), eq(eq), value(std::move(value)) {}
 
-const std::string AssignExpression::prettify(void) const {
+std::string AssignExpression::prettify(void) const {
   return std::format("(assign {} {} {})", lhs->prettify(), eq.value,
                      value->prettify());
 }
 SymbolType AssignExpression::get_type(Analysis::Context &ctx) const {
   return lhs->get_type(ctx);
 }
-const void AssignExpression::analyse(Analysis::Context &ctx) const {
+void AssignExpression::analyse(Analysis::Context &ctx) const {
   // TODO
   lhs->analyse(ctx);
   value->analyse(ctx);

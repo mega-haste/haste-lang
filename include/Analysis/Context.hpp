@@ -35,6 +35,7 @@ public:
   void declare(const std::string &name);
   void define(const std::string &name, SymbolType &&type);
   void define(const std::string &name, SymbolType &&type, bool mut = false);
+  Symbol *local_first_look_up(const std::string &key);
   void scope_begin(void);
   void scope_end(void);
 

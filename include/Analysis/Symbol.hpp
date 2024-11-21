@@ -60,8 +60,6 @@ public:
 
   SymbolArrayType(SymbolHandler &&type);
   SymbolArrayType(SymbolHandler &&type, int size, int dimention);
-
-  SymbolArrayType(const SymbolArrayType &);
 };
 
 class SymbolIdentifierType {
@@ -82,6 +80,7 @@ public:
     Arg(std::string key, SymbolHandler &&type, bool has_default);
 
     bool operator==(const Arg &other) const;
+    bool operator!=(const Arg &other) const;
   };
 
   std::vector<Arg> args;

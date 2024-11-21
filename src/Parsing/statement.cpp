@@ -1,5 +1,4 @@
 #include "Parser.hpp"
-#include "macros.hpp"
 
 Statement Parser::statement(void) {
   if (match({TokenType::Return}))

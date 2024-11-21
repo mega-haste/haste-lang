@@ -13,16 +13,18 @@ using Analysis::SymbolType;
 
 class ExpressionNode {
 public:
-  virtual const std::string prettify(void) const = 0;
+  virtual std::string prettify(void) const = 0;
   virtual SymbolType get_type(Analysis::Context &ctx) const = 0;
-  virtual const void analyse(Analysis::Context &ctx) const;
+  virtual void analyse(Analysis::Context &ctx) const;
+
+  virtual ~ExpressionNode() = default;
 };
 
 using Expression = std::unique_ptr<ExpressionNode>;
 
 class ExpressionNone : public ExpressionNode {
 public:
-  const std::string prettify() const override;
+  std::string prettify() const override;
   SymbolType get_type(Analysis::Context &ctx) const override;
 };
 
@@ -31,7 +33,7 @@ public:
   const Token &value;
 
   explicit LiteralExpression(const Token &v);
-  const std::string prettify(void) const override;
+  std::string prettify(void) const override;
   SymbolType get_type(Analysis::Context &ctx) const override;
 };
 
@@ -40,7 +42,7 @@ public:
   bool value;
 
   explicit BooleanExpression(bool v);
-  const std::string prettify(void) const override;
+  std::string prettify(void) const override;
   SymbolType get_type(Analysis::Context &ctx) const override;
 };
 
@@ -50,9 +52,9 @@ public:
   Expression rhs;
 
   explicit UnaryExpression(const Token &op, Expression &&rhs);
-  const std::string prettify(void) const override;
+  std::string prettify(void) const override;
   SymbolType get_type(Analysis::Context &ctx) const override;
-  const void analyse(Analysis::Context &ctx) const override;
+  void analyse(Analysis::Context &ctx) const override;
 };
 
 class BinaryExpression : public ExpressionNode {
@@ -63,9 +65,9 @@ public:
 
   explicit BinaryExpression(Expression &&lhs, const Token &op,
                             Expression &&rhs);
-  const std::string prettify(void) const override;
+  std::string prettify(void) const override;
   SymbolType get_type(Analysis::Context &ctx) const override;
-  const void analyse(Analysis::Context &ctx) const override;
+  void analyse(Analysis::Context &ctx) const override;
 };
 
 class GroupingExpression : public ExpressionNode {
@@ -73,9 +75,9 @@ public:
   Expression expr;
 
   explicit GroupingExpression(Expression &&expr);
-  const std::string prettify(void) const override;
+  std::string prettify(void) const override;
   SymbolType get_type(Analysis::Context &ctx) const override;
-  const void analyse(Analysis::Context &ctx) const override;
+  void analyse(Analysis::Context &ctx) const override;
 };
 
 class InlineIf : public ExpressionNode {
@@ -86,9 +88,9 @@ public:
 
   explicit InlineIf(Expression &&condition, Expression &&consequent,
                     Expression &&alternate);
-  const std::string prettify(void) const override;
+  std::string prettify(void) const override;
   SymbolType get_type(Analysis::Context &ctx) const override;
-  const void analyse(Analysis::Context &ctx) const override;
+  void analyse(Analysis::Context &ctx) const override;
 };
 
 class AsExpression : public ExpressionNode {
@@ -97,9 +99,9 @@ public:
   Type type;
 
   explicit AsExpression(Expression &&expr, Type &&type);
-  const std::string prettify(void) const override;
+  std::string prettify(void) const override;
   SymbolType get_type(Analysis::Context &ctx) const override;
-  const void analyse(Analysis::Context &ctx) const override;
+  void analyse(Analysis::Context &ctx) const override;
 };
 
 class IdentifierExpression : public ExpressionNode {
@@ -107,9 +109,9 @@ public:
   const Token &value;
 
   explicit IdentifierExpression(const Token &v);
-  const std::string prettify(void) const override;
+  std::string prettify(void) const override;
   SymbolType get_type(Analysis::Context &ctx) const override;
-  const void analyse(Analysis::Context &ctx) const override;
+  void analyse(Analysis::Context &ctx) const override;
 };
 
 class CallExpression : public ExpressionNode {
@@ -120,8 +122,9 @@ public:
 
   explicit CallExpression(Expression &&callee, const Token &paren,
                           std::vector<Expression> arguments);
-  const std::string prettify(void) const override;
+  std::string prettify(void) const override;
   SymbolType get_type(Analysis::Context &ctx) const override;
+  void analyse(Analysis::Context &ctx) const override;
 };
 
 class MemberAccessExpression : public ExpressionNode {
@@ -132,7 +135,7 @@ public:
 
   explicit MemberAccessExpression(Expression &&group, const Token &dot,
                                   const Token &member);
-  const std::string prettify(void) const override;
+  std::string prettify(void) const override;
   SymbolType get_type(Analysis::Context &ctx) const override;
 };
 
@@ -146,7 +149,7 @@ public:
   explicit SubscriptingExpression(Expression &&item, const Token &open_brackets,
                                   const Token &close_brackets,
                                   Expression &&index);
-  const std::string prettify(void) const override;
+  std::string prettify(void) const override;
   SymbolType get_type(Analysis::Context &ctx) const override;
 };
 
@@ -157,7 +160,7 @@ public:
 
   explicit TupleExpression(std::vector<Expression> &&elements,
                            const Token &closing_parentheses);
-  const std::string prettify(void) const override;
+  std::string prettify(void) const override;
   SymbolType get_type(Analysis::Context &ctx) const override;
 };
 
@@ -169,7 +172,7 @@ public:
 
   explicit ScopeResolutionExpression(Expression &&group, const Token &colon,
                                      const Token &member);
-  const std::string prettify(void) const override;
+  std::string prettify(void) const override;
   SymbolType get_type(Analysis::Context &ctx) const override;
 };
 
@@ -181,9 +184,9 @@ public:
 
   explicit AssignExpression(Expression &&lhs, const Token &eq,
                             Expression &&value);
-  const std::string prettify(void) const override;
+  std::string prettify(void) const override;
   SymbolType get_type(Analysis::Context &ctx) const override;
-  const void analyse(Analysis::Context &ctx) const override;
+  void analyse(Analysis::Context &ctx) const override;
 };
 
 } // namespace AST

@@ -19,7 +19,7 @@ bool Context::is_declared(const std::string &key) {
 }
 
 bool Context::is_defined(const std::string &key) {
-  Symbol *symbol = symbol_table.local_first_look_up(key);
+  Symbol *symbol = local_first_look_up(key);
   if (symbol == nullptr)
     return false;
   return symbol->defined;
@@ -37,6 +37,10 @@ void Context::define(const std::string &name, SymbolType &&type, bool mut) {
 }
 void Context::define(const std::string &name, SymbolType &&type) {
   symbol_table.define(name, std::move(type));
+}
+
+Symbol *Context::local_first_look_up(const std::string &key) {
+  return symbol_table.local_first_look_up(key);
 }
 
 void Context::scope_begin(void) { symbol_table.scope_begin(); }
@@ -86,7 +90,7 @@ void Context::report_summary(void) const {
   if (has_error())
     std::cerr << "report summary: couldn't Compile " << source_file
               << " due to " << error_count << " previous "
-              << (error_count == 1 ? "error." : "errors.\n");
+              << (error_count == 1 ? "error." : "errors.") << '\n';
   if (has_warning())
     std::cerr << "Generated " << warnings_count
               << (warnings_count == 0 ? " warning" : " warnings") << " in "

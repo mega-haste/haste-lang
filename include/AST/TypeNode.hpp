@@ -2,8 +2,7 @@
 
 #include "Analysis/Symbol.hpp"
 #include "tokens.hpp"
-#include <format>
-#include <macros.hpp>
+#include <common.hpp>
 #include <memory>
 #include <optional>
 #include <string>
@@ -20,6 +19,8 @@ class TypeNode {
 public:
   virtual const std::string prettify() const = 0;
   virtual SymbolType get_type(void) const;
+
+  virtual ~TypeNode() = default;
 };
 
 class TypeLiteral : public TypeNode {

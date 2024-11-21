@@ -13,7 +13,7 @@ namespace Analysis {
 SymbolTable::SymbolTable() { scopes.push_back(Scope()); }
 
 void SymbolTable::print_table(void) const {
-  std::cout << "**** Started ****\n";
+  std::cout << "\n**** Started ****\n";
   int i = 0;
   for (auto &scope : scopes) {
     std::cout << "\n>>>> Scope " << i << ":\n";
@@ -23,8 +23,8 @@ void SymbolTable::print_table(void) const {
     }
     i++;
   }
-  std::cout << "\nEnter to continue";
-  getchar();
+  // std::cout << "\nEnter to continue";
+  // getchar();
 }
 
 void SymbolTable::declare(const std::string &name) {
@@ -46,10 +46,13 @@ void SymbolTable::define(const std::string &name, SymbolType &&type, bool mut) {
 }
 
 void SymbolTable::scope_begin(void) { scopes.push_back(Scope()); }
-void SymbolTable::scope_end(void) { scopes.pop_back(); }
+void SymbolTable::scope_end(void) {
+  // print_table();
+  scopes.pop_back();
+}
 
 Symbol *SymbolTable::local_first_look_up(const std::string &key) {
-  for (std::size_t i = scopes.size() - 1; i > 0; i--) {
+  for (std::size_t i = scopes.size() - 1; i >= 0; i--) {
     if (scopes[i].contains(key)) {
       return &scopes[i][key];
     }

@@ -1,6 +1,7 @@
 #include "Analysis/Symbol.hpp"
 #include "Analysis/Context.hpp"
 #include "tokens.hpp"
+#include <cstddef>
 #include <format>
 #include <memory>
 #include <string>
@@ -20,11 +21,6 @@ SymbolArrayType::SymbolArrayType(SymbolHandler &&type)
     : type(std::move(type)) {}
 SymbolArrayType::SymbolArrayType(SymbolHandler &&type, int size, int dimention)
     : type(std::move(type)), size(size), dimention(dimention) {}
-SymbolArrayType::SymbolArrayType(const SymbolArrayType &other) {
-  type = other.type;
-  size = other.size;
-  dimention = other.dimention;
-}
 
 SymbolIdentifierType::SymbolIdentifierType(std::string ident) : ident(ident) {}
 
@@ -36,6 +32,9 @@ SymbolFunctionType::Arg::Arg(std::string key, SymbolHandler &&type,
 bool SymbolFunctionType::Arg::operator==(const Arg &other) const {
   return match(type, other.type);
 }
+bool SymbolFunctionType::Arg::operator!=(const Arg &other) const {
+  return not(*this == other);
+}
 
 SymbolFunctionType::SymbolFunctionType(SymbolHandler &&return_type)
     : return_type(std::move(return_type)) {}
@@ -46,7 +45,7 @@ bool SymbolFunctionType::match_args(
     const std::vector<SymbolFunctionType::Arg> other_args) const {
   if (args.size() != other_args.size())
     return false;
-  for (int i = 0; i < args.size(); i++) {
+  for (std::size_t i = 0; i < args.size(); i++) {
     auto &my_arg = args[i];
     auto &other_arg = other_args[i];
     if (my_arg != other_arg)
@@ -201,7 +200,7 @@ SymbolType do_binary(const SymbolType &lhs, const Token &op,
 std::string prettify(SymbolType &type) {
   if (is_function(type)) {
     SymbolFunctionType fn = std::get<SymbolFunctionType>(type);
-    return std::format("(...): {}", prettify(*fn.return_type));
+    return std::format("func (...): {}", prettify(*fn.return_type));
   }
   if (is_array(type)) {
     SymbolArrayType arr = std::get<SymbolArrayType>(type);
