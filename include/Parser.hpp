@@ -42,6 +42,7 @@ private:
   Statement let(void);
 
   std::vector<Statement> block(void);
+  Statement block_statement(void);
   Statement if_condition(void);
   Statement $return(void);
 

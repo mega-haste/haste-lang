@@ -2,6 +2,7 @@
 #define __SYMBOL_TABLE_HPP
 
 #include "Symbol.hpp"
+#include "tokens.hpp"
 #include <deque>
 #include <string>
 #include <unordered_map>
@@ -13,20 +14,22 @@ private:
   void print_table(void) const;
 
 public:
-  using Scope = std::unordered_map<std::string, Symbol>;
+  using Scope = std::unordered_map<Token, Symbol>;
   std::deque<Scope> scopes;
 
   SymbolTable();
 
-  void declare(const std::string &name);
-  void define(const std::string &name, SymbolType &&type, bool mut = false);
+  void declare(const Token &ident);
+  void define(const Token &ident, SymbolType &&type, bool mut = false);
 
   void scope_begin(void);
   void scope_end(void);
 
-  Symbol *local_first_look_up(const std::string &key);
+  Symbol *local_first_look_up(const Token &key);
 
   Scope &get_current_scope(void);
+
+  ~SymbolTable() = default;
 };
 
 } // namespace Analysis

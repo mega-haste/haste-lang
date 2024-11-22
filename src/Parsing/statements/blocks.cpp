@@ -1,4 +1,5 @@
 #include "Parser.hpp"
+#include <iterator>
 
 std::vector<Statement> Parser::block(void) {
   std::vector<Statement> statements;

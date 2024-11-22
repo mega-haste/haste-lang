@@ -1,5 +1,7 @@
 #include "Analysis/SymbolTable.hpp"
 #include "Analysis/Symbol.hpp"
+#include "tokens.hpp"
+#include <algorithm>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
@@ -18,8 +20,9 @@ void SymbolTable::print_table(void) const {
   for (auto &scope : scopes) {
     std::cout << "\n>>>> Scope " << i << ":\n";
     for (auto &symbol : scope) {
-      std::cout << symbol.first << ": " << (symbol.second.mut ? "mut" : "immut")
-                << " " << symbol.second.prettify() << " - ";
+      std::cout << symbol.first.value << ": "
+                << (symbol.second.mut ? "mut" : "immut") << " "
+                << symbol.second.prettify() << " - ";
     }
     i++;
   }
@@ -27,19 +30,19 @@ void SymbolTable::print_table(void) const {
   // getchar();
 }
 
-void SymbolTable::declare(const std::string &name) {
-  scopes.back()[name] =
+void SymbolTable::declare(const Token &ident) {
+  scopes.back()[ident] =
       Symbol(std::make_shared<SymbolType>(NativeType::Unknown), false, false);
 }
 
-void SymbolTable::define(const std::string &name, SymbolType &&type, bool mut) {
+void SymbolTable::define(const Token &ident, SymbolType &&type, bool mut) {
   Scope &current_scope = get_current_scope();
-  if (!current_scope.contains(name))
+  if (!current_scope.contains(ident))
     throw std::logic_error(std::format("Expected `{}` to be declared in the "
                                        "current scope. `{}` isn't declared.",
-                                       name, name));
+                                       ident.value, ident.value));
 
-  Symbol &the_symbol = current_scope[name];
+  Symbol &the_symbol = current_scope[ident];
   the_symbol.type = std::make_unique<SymbolType>(std::move(type));
   the_symbol.defined = true;
   the_symbol.mut = mut;
@@ -51,7 +54,7 @@ void SymbolTable::scope_end(void) {
   scopes.pop_back();
 }
 
-Symbol *SymbolTable::local_first_look_up(const std::string &key) {
+Symbol *SymbolTable::local_first_look_up(const Token &key) {
   for (std::size_t i = scopes.size() - 1; i >= 0; i--) {
     if (scopes[i].contains(key)) {
       return &scopes[i][key];

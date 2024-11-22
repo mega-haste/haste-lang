@@ -44,8 +44,9 @@ public:
   bool mut = false;
   int uses = 0;
 
-  Symbol();
+  Symbol() = default;
   Symbol(SymbolHandler &&type, bool defined, bool mut);
+  ~Symbol() = default;
 
   bool is_used(void) const;
 
@@ -72,12 +73,12 @@ public:
 class SymbolFunctionType {
 public:
   struct Arg {
-    std::string key;
+    const Token &key;
     SymbolHandler type;
     bool has_default = true;
 
-    Arg(std::string key, SymbolHandler &&type);
-    Arg(std::string key, SymbolHandler &&type, bool has_default);
+    Arg(const Token &key, SymbolHandler &&type);
+    Arg(const Token &key, SymbolHandler &&type, bool has_default);
 
     bool operator==(const Arg &other) const;
     bool operator!=(const Arg &other) const;

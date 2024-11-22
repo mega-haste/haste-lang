@@ -17,6 +17,9 @@ using Type = std::unique_ptr<TypeNode>;
 
 class TypeNode {
 public:
+  Token start;
+  Token end;
+
   virtual const std::string prettify() const = 0;
   virtual SymbolType get_type(void) const;
 
@@ -52,6 +55,9 @@ public:
 
 class TypedIdentifier {
 public:
+  Token start;
+  Token end;
+
   const Token &identifier;
   Type type;
 

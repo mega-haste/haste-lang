@@ -80,15 +80,15 @@ std::string FunctionDef::prettify(const int depth) const {
                      body->prettify(depth + 4));
 }
 void FunctionDef::analyse(Analysis::Context &ctx) const {
-  ctx.declare(identifier.value);
+  ctx.declare(identifier);
   Analysis::SymbolFunctionType type = Analysis::SymbolFunctionType(
       std::make_unique<SymbolType>(return_type->get_type()));
   for (auto &argument : arguments) {
     type.args.push_back(Analysis::SymbolFunctionType::Arg(
-        argument.identifier.value,
+        argument.identifier,
         std::make_shared<SymbolType>(argument.type->get_type())));
   }
-  ctx.define(identifier.value, type, false);
+  ctx.define(identifier, type, false);
 
   ctx.scope_begin();
 
@@ -115,7 +115,7 @@ std::string LetDef::prettify(const int depth) const {
       value.has_value() ? value.value()->prettify() : "undefined");
 }
 void LetDef::analyse(Analysis::Context &ctx) const {
-  ctx.declare(ident.value);
+  ctx.declare(ident);
 
   SymbolType expected_type =
       type.has_value() ? type.value()->get_type() : Analysis::NativeType::Auto;
@@ -134,7 +134,7 @@ void LetDef::analyse(Analysis::Context &ctx) const {
     }
     if (value.has_value())
       value.value()->analyse(ctx);
-    ctx.define(ident.value, std::move(expected_type), mut);
+    ctx.define(ident, std::move(expected_type), mut);
     return;
   }
 
@@ -154,7 +154,7 @@ void LetDef::analyse(Analysis::Context &ctx) const {
 
   if (value.has_value())
     value.value()->analyse(ctx);
-  ctx.define(ident.value, std::move(expected_type), mut);
+  ctx.define(ident, std::move(expected_type), mut);
 }
 
 IfStatement::IfStatement(Expression &&condition, Statement &&then,

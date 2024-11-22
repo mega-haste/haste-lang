@@ -1,7 +1,16 @@
+#include "AST/Expressions.hpp"
 #include "Parser.hpp"
 #include "tokens.hpp"
 
-Expression Parser::expression(void) { return assignment(); }
+Expression Parser::expression(void) {
+  const Token &starting_token = peek();
+
+  Expression result = assignment();
+  result->start = starting_token;
+  result->end = previous();
+
+  return result;
+}
 
 Expression Parser::assignment(void) {
   auto left = inline_if();
@@ -10,14 +19,18 @@ Expression Parser::assignment(void) {
                 TokenType::PercentSignEq})) {
     const Token &eq = previous();
     auto value = expression();
+
     left = std::make_unique<AssignExpression>(std::move(left), eq,
                                               std::move(value));
+    left->end = previous();
   }
   return left;
 }
 
 Expression Parser::inline_if(void) {
   if (match({TokenType::If})) {
+    const Token &start_token = previous();
+
     auto condition = expression();
 
     consume(TokenType::Then,
@@ -27,8 +40,12 @@ Expression Parser::inline_if(void) {
     consume(TokenType::Else, "Expected `else` after the `then` cluase.");
     auto alternate = expression();
 
-    return std::make_unique<InlineIf>(
-        std::move(condition), std::move(consequent), std::move(alternate));
+    InlineIf result(std::move(condition), std::move(consequent),
+                    std::move(alternate));
+    result.start = start_token;
+    result.end = previous();
+
+    return std::make_unique<InlineIf>(std::move(result));
   }
 
   return as();
@@ -40,6 +57,7 @@ Expression Parser::as(void) {
   while (match({TokenType::As})) {
     auto type = parse_type();
     lhs = std::make_unique<AsExpression>(std::move(lhs), std::move(type));
+    lhs->end = previous();
   }
 
   return lhs;
@@ -53,6 +71,7 @@ Expression Parser::$or(void) {
     auto right = $and();
     left = std::make_unique<BinaryExpression>(std::move(left), op,
                                               std::move(right));
+    left->end = previous();
   }
 
   return left;
@@ -66,6 +85,7 @@ Expression Parser::$and(void) {
     auto right = bitwise_and();
     left = std::make_unique<BinaryExpression>(std::move(left), op,
                                               std::move(right));
+    left->end = previous();
   }
 
   return left;
@@ -79,6 +99,7 @@ Expression Parser::bitwise_and(void) {
     auto right = bitwise_or();
     left = std::make_unique<BinaryExpression>(std::move(left), op,
                                               std::move(right));
+    left->end = previous();
   }
 
   return left;
@@ -92,6 +113,7 @@ Expression Parser::bitwise_or(void) {
     auto right = equality();
     left = std::make_unique<BinaryExpression>(std::move(left), op,
                                               std::move(right));
+    left->end = previous();
   }
 
   return left;
@@ -105,6 +127,7 @@ Expression Parser::equality(void) {
     auto right = relational();
     left = std::make_unique<BinaryExpression>(std::move(left), op,
                                               std::move(right));
+    left->end = previous();
   }
 
   return left;
@@ -119,6 +142,7 @@ Expression Parser::relational(void) {
     auto right = bitwise_shift();
     left = std::make_unique<BinaryExpression>(std::move(left), op,
                                               std::move(right));
+    left->end = previous();
   }
 
   return left;
@@ -132,6 +156,7 @@ Expression Parser::bitwise_shift(void) {
     auto right = addition();
     left = std::make_unique<BinaryExpression>(std::move(left), op,
                                               std::move(right));
+    left->end = previous();
   }
 
   return left;
@@ -145,6 +170,7 @@ Expression Parser::addition(void) {
     auto right = multiplication();
     left = std::make_unique<BinaryExpression>(std::move(left), op,
                                               std::move(right));
+    left->end = previous();
   }
 
   return left;
@@ -158,6 +184,7 @@ Expression Parser::multiplication(void) {
     auto right = power();
     left = std::make_unique<BinaryExpression>(std::move(left), op,
                                               std::move(right));
+    left->end = previous();
   }
 
   return left;
@@ -171,6 +198,7 @@ Expression Parser::power(void) {
     auto right = nuts(); // 🥜
     left = std::make_unique<BinaryExpression>(std::move(left), op,
                                               std::move(right));
+    left->end = previous();
   }
 
   return left;
@@ -181,7 +209,10 @@ Expression Parser::nuts(void) {
   if (match({TokenType::Not, TokenType::BitwiseNot})) {
     const Token &op = previous();
     auto right = nuts(); // 🥜
-    return std::make_unique<UnaryExpression>(op, std::move(right));
+    auto res = std::make_unique<UnaryExpression>(op, std::move(right));
+    res->start = op;
+    res->end = previous();
+    return res;
   }
 
   return unary();
@@ -191,7 +222,10 @@ Expression Parser::unary(void) {
   if (match({TokenType::Minus, TokenType::Plus})) {
     const Token &op = previous();
     auto right = unary();
-    return std::make_unique<UnaryExpression>(op, std::move(right));
+    auto res = std::make_unique<UnaryExpression>(op, std::move(right));
+    res->start = op;
+    res->end = previous();
+    return res;
   }
 
   return call();
@@ -203,6 +237,7 @@ Expression Parser::call(void) {
   while (true) {
     if (match({TokenType::OpenParen})) {
       expr = finish_call(std::move(expr));
+      expr->end = previous();
     } else if (match({TokenType::OpenSquareBracket})) {
       const Token &open_bracket = previous();
       auto index = expression();
@@ -210,11 +245,13 @@ Expression Parser::call(void) {
                                            "Expected closing bracket ']'.");
       expr = std::make_unique<SubscriptingExpression>(
           std::move(expr), open_bracket, close_bracket, std::move(index));
+      expr->end = previous();
     } else if (match({TokenType::Dot})) {
       const Token &name =
           consume_identifier("Expected property name after the dot '.'.");
       expr = std::make_unique<MemberAccessExpression>(std::move(expr),
                                                       previous(), name);
+      expr->end = previous();
     } else {
       break;
     }
@@ -250,32 +287,66 @@ Expression Parser::scope_resolution(void) {
     const Token &ident = consume_identifier("Expected an identifier here.");
     left = std::make_unique<ScopeResolutionExpression>(std::move(left),
                                                        colon_colon, ident);
+    left->end = previous();
   }
 
   return left;
 }
 
 Expression Parser::primary(void) {
-  if (match({TokenType::True}))
-    return std::make_unique<BooleanExpression>(true);
-  if (match({TokenType::False}))
-    return std::make_unique<BooleanExpression>(false);
+  const Token &starting_token = peek();
+  if (match({TokenType::True})) {
+    auto res = std::make_unique<BooleanExpression>(true);
+
+    res->start = starting_token;
+    res->end = previous();
+
+    return res;
+  }
+  if (match({TokenType::False})) {
+    auto res = std::make_unique<BooleanExpression>(false);
+
+    res->start = starting_token;
+    res->end = previous();
+
+    return res;
+  }
 
   if (match({TokenType::CharLit, TokenType::StringLit, TokenType::IntLit,
-             TokenType::FloatLit}))
-    return std::make_unique<LiteralExpression>(previous());
+             TokenType::FloatLit})) {
+    auto res = std::make_unique<LiteralExpression>(previous());
 
-  if (match({TokenType::Identifier, TokenType::SpicialIdentifier}))
-    return std::make_unique<IdentifierExpression>(previous());
+    res->start = starting_token;
+    res->end = previous();
+
+    return res;
+  }
+
+  if (match({TokenType::Identifier, TokenType::SpicialIdentifier})) {
+    auto res = std::make_unique<IdentifierExpression>(previous());
+
+    res->start = starting_token;
+    res->end = previous();
+
+    return res;
+  }
 
   if (match({TokenType::OpenParen})) {
     std::vector<Expression> exprs;
     exprs.push_back(expression());
-    if (match({TokenType::Comma}))
-      return parse_tuple(std::move(exprs));
+    if (match({TokenType::Comma})) {
+      auto res = parse_tuple(std::move(exprs));
+      res->start = starting_token;
+      return res;
+    }
 
     consume(TokenType::CloseParen, "Expected ')' after expression.");
-    return std::make_unique<GroupingExpression>(std::move(exprs[0]));
+    auto res = std::make_unique<GroupingExpression>(std::move(exprs[0]));
+
+    res->start = starting_token;
+    res->end = previous();
+
+    return res;
   }
 
   if (match({TokenType::If})) {
@@ -297,6 +368,8 @@ Expression Parser::parse_tuple(std::vector<Expression> &&exprs) {
 
   const Token &closing_parentheses =
       consume(TokenType::CloseParen, "Expected ')' after expression.");
-  return std::make_unique<TupleExpression>(std::move(exprs),
-                                           closing_parentheses);
+  auto res =
+      std::make_unique<TupleExpression>(std::move(exprs), closing_parentheses);
+  res->end = closing_parentheses;
+  return res;
 }

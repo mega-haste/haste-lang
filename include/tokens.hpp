@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstddef>
+#include <functional>
+#include <iterator>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -103,12 +105,13 @@ enum class TokenType {
   Catch,
 };
 
-class Token {
-public:
+struct Token {
   TokenType type = (TokenType)0;
   std::string value;
   std::size_t line = 1;
   std::size_t column = 1;
+  std::size_t at = 0;
+  std::size_t length = 0;
 
   Token() = default;
   Token(TokenType type) : type(type) {}
@@ -117,19 +120,18 @@ public:
       : type(type), value(value), line(line) {}
   Token(TokenType type, std::string value, std::size_t line, std::size_t column)
       : type(type), value(value), line(line), column(column) {}
-
-  bool operator==(const TokenType &other) { return type == other; }
-
-  bool operator==(std::string &other) { return value == other; }
-
-  bool operator==(Token &other) {
-    return type == other.type && value == other.value;
-  }
+  Token(TokenType type, std::string value, std::size_t line, std::size_t column,
+        std::size_t at)
+      : type(type), value(value), line(line), column(column), at(at) {}
+  Token(TokenType type, std::string value, std::size_t line, std::size_t column,
+        std::size_t at, std::size_t length)
+      : type(type), value(value), line(line), column(column), at(at),
+        length(length) {}
+  ~Token() = default;
 
   bool operator==(const TokenType &other) const { return type == other; }
-  bool operator==(std::string &other) const { return value == other; }
-
-  bool operator==(Token &other) const {
+  bool operator==(const std::string &other) const { return value == other; }
+  bool operator==(const Token &other) const {
     return type == other.type && value == other.value;
   }
 
@@ -146,6 +148,7 @@ public:
     stream << ")";
     return stream.str();
   }
+
   static std::string token_tostring(TokenType token) {
     switch (token) {
 #define TM(token)                                                              \
@@ -219,6 +222,13 @@ public:
     default:
       return "Unknown";
     }
+  }
+};
+
+template <> struct std::hash<Token> {
+  std::size_t operator()(const Token &token) const noexcept {
+    std::size_t h1 = std::hash<std::string>{}(token.value);
+    return h1;
   }
 };
 

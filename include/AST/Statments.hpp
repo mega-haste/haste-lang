@@ -22,6 +22,9 @@ using Analysis::SymbolType;
 
 class StatementNode {
 public:
+  Token start = Token();
+  Token end = Token();
+
   virtual std::string prettify(const int depth = 0) const = 0;
   virtual void analyse(Analysis::Context &ctx) const;
 

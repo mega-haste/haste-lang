@@ -11,7 +11,7 @@
 #include <vector>
 
 Scanner::Scanner() : m_current_line("") { setup_keywords(); }
-Scanner::Scanner(std::filesystem::path &path) : m_source_file(path) {
+Scanner::Scanner(const std::filesystem::path &path) : m_source_file(path) {
   setup_keywords();
 }
 
@@ -20,6 +20,8 @@ void Scanner::reconstruct(std::string content) {
   m_current = 0;
   m_start = 0;
   m_column = 1;
+  m_index_start = 0;
+  m_index_end = 0;
   m_tokens.clear();
 }
 
@@ -59,12 +61,13 @@ void Scanner::setup_keywords() {
 
 TokenList Scanner::scan() {
   while (std::getline(m_source_file, m_current_line)) {
-    LOG(m_current_line);
     scan_line();
     m_line++;
     m_column = 1;
     m_current = 0;
     m_start = 0;
+    m_index_end += 1;
+    m_index_start += m_index_end - m_index_start;
   }
   add_token(TokenType::_EOF);
   return m_tokens;
@@ -249,7 +252,8 @@ void Scanner::add_token(TokenType type) {
 }
 
 void Scanner::add_token(TokenType type, std::string value) {
-  m_tokens.push_back(Token(type, value, m_line, m_column));
+  m_tokens.push_back(Token(type, value, m_line, m_column, m_index_start,
+                           m_index_end - m_index_start));
   m_column += value.size();
 }
 
@@ -311,10 +315,14 @@ bool Scanner::at_end() { return m_current >= m_current_line.length(); }
 
 bool Scanner::at_end(std::size_t i) { return i >= m_current_line.length(); }
 
-char Scanner::advance() { return m_current_line[m_current++]; }
+char Scanner::advance() {
+  m_index_end++;
+  return m_current_line[m_current++];
+}
 
 char Scanner::advance(std::size_t i) {
   m_current += i;
+  m_index_end += i;
   return m_current_line[m_current - 1];
 }
 

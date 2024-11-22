@@ -2,6 +2,10 @@
 
 #include <iostream>
 
+#define IF
+#define THEN ?
+#define ELSE :
+
 #define UNUSED(expr)                                                           \
   do {                                                                         \
     (void)(expr);                                                              \

@@ -13,6 +13,9 @@ using Analysis::SymbolType;
 
 class ExpressionNode {
 public:
+  Token start = Token();
+  Token end = Token();
+
   virtual std::string prettify(void) const = 0;
   virtual SymbolType get_type(Analysis::Context &ctx) const = 0;
   virtual void analyse(Analysis::Context &ctx) const;

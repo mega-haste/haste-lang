@@ -146,18 +146,16 @@ std::string IdentifierExpression::prettify(void) const {
   }
 }
 SymbolType IdentifierExpression::get_type(Analysis::Context &ctx) const {
-  if (ctx.is_defined(value.value)) {
-    Analysis::Symbol *symbol =
-        ctx.symbol_table.local_first_look_up(value.value);
+  if (ctx.is_defined(value)) {
+    Analysis::Symbol *symbol = ctx.symbol_table.local_first_look_up(value);
     symbol->uses++;
     return *symbol->type;
   }
   return NativeType::Unknown;
 }
 void IdentifierExpression::analyse(Analysis::Context &ctx) const {
-  if (ctx.is_defined(value.value)) {
-    Analysis::Symbol *symbol =
-        ctx.symbol_table.local_first_look_up(value.value);
+  if (ctx.is_defined(value)) {
+    Analysis::Symbol *symbol = ctx.symbol_table.local_first_look_up(value);
     symbol->uses++;
     return;
   }
@@ -201,8 +199,10 @@ void CallExpression::analyse(Analysis::Context &ctx) const {
   Analysis::SymbolFunctionType &callee_func =
       std::get<Analysis::SymbolFunctionType>(callee_type);
   if (arguments.size() != callee_func.args.size()) {
-    ctx.report_error(paren, "Argument Error",
-                     "The Argument size didn't match what's given.");
+    ctx.report_error(
+        paren, "Argument Error",
+        std::format("Expected {} arguments to be passed, only got {}.",
+                    callee_func.args.size(), arguments.size()));
     return;
   }
   for (std::size_t i = 0; i < arguments.size(); i++) {
@@ -212,8 +212,12 @@ void CallExpression::analyse(Analysis::Context &ctx) const {
     SymbolType argument_type = argument->get_type(ctx);
     auto &target_arg_type = callee_func.args[i];
     if (!Analysis::match(argument_type, *target_arg_type.type)) {
-      ctx.report_error(paren, "Argument Error",
-                       "An arg didn't matched the type.");
+      ctx.report_error(argument->start, "Argument Error",
+                       std::format("the {} argument didn't match the expected "
+                                   "type `{}`, got `{}` instead.",
+                                   i + 1,
+                                   Analysis::prettify(*target_arg_type.type),
+                                   Analysis::prettify(argument_type)));
     }
   }
 }

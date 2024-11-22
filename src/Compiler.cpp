@@ -10,9 +10,6 @@ void Compiler::compile(std::filesystem::path path) {
   tu->do_scan();
 
   const TokenList &tokens = tu->get_tokens();
-  // for (auto &token : tokens) {
-  //   LOG(token.to_string());
-  // }
 
   Parser parser(tokens);
   parser.parse(tu->program);

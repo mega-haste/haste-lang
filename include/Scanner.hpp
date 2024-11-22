@@ -12,7 +12,7 @@
 class Scanner {
 public:
   Scanner();
-  Scanner(std::filesystem::path &path);
+  Scanner(const std::filesystem::path &path);
 
   TokenList scan(void);
   TokenList scan_line(void);
@@ -47,6 +47,8 @@ private:
   std::string m_current_line = "";
   std::size_t m_line = 1;
   std::size_t m_column = 1;
+  std::size_t m_index_start = 0;
+  std::size_t m_index_end = 0;
   std::vector<Token> m_tokens;
 
   void scan_ident();

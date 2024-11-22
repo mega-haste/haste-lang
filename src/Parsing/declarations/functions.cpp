@@ -1,7 +1,7 @@
 #include "Parser.hpp"
 
-
 std::unique_ptr<FunctionDef> Parser::function(void) {
+  const Token &starting_token = previous();
   const Token &name = consume(TokenType::Identifier, "Expected function name.");
 
   consume(TokenType::OpenParen, "Expected '(' after function name.");
@@ -10,7 +10,7 @@ std::unique_ptr<FunctionDef> Parser::function(void) {
     do {
       if (args.size() > MAX_PRAM_COUT)
         throw error(peek(), "Cannot have more than 8 parameters.");
-      
+
       args.push_back(parse_typed_ident());
     } while (match({TokenType::Comma}));
   }
@@ -23,16 +23,20 @@ std::unique_ptr<FunctionDef> Parser::function(void) {
 
   Statement body;
   if (match({TokenType::OpenCurlyBrase})) {
-    // consume(TokenType::OpenCurlyBrase, "Expected '{' as starting of a function body.");
-    body = std::make_unique<BlockStatement>(block());
+    const Token &block_starting_token = previous();
+
+    body = block_statement();
+    body->start = block_starting_token;
+    body->end = previous();
   } else if (match({TokenType::Eq})) {
     body = expression_statement();
   } else {
     throw error(peek(), "Expected either '=' or '{'.");
   }
 
-  return std::make_unique<FunctionDef>(
-    name, std::move(args),
-    std::move(return_type), std::move(body)
-  );
+  FunctionDef result(name, std::move(args), std::move(return_type),
+                     std::move(body));
+  result.start = starting_token;
+  result.end = previous();
+  return std::make_unique<FunctionDef>(std::move(result));
 }

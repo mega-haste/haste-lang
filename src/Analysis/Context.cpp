@@ -1,24 +1,30 @@
 #include "Analysis/Context.hpp"
 #include "Analysis/Symbol.hpp"
+#include "Reporter.hpp"
+#include "common.hpp"
+#include "tokens.hpp"
 #include <cstddef>
 #include <filesystem>
 #include <format>
 #include <iostream>
 #include <string>
+#include <termcolor/termcolor.hpp>
 
 namespace Analysis {
 
-Context::Context(std::filesystem::path &source_file)
-    : source_file(source_file) {}
+Context::Context(std::filesystem::path source_file, Reporter &reporter)
+    : m_reporter(reporter), source_file(source_file) {
+  m_reporter.reseek();
+}
 
-bool Context::is_declared(const std::string &key) {
+bool Context::is_declared(const Token &key) {
   Symbol *symbol = symbol_table.local_first_look_up(key);
   if (symbol == nullptr)
     return false;
   return true;
 }
 
-bool Context::is_defined(const std::string &key) {
+bool Context::is_defined(const Token &key) {
   Symbol *symbol = local_first_look_up(key);
   if (symbol == nullptr)
     return false;
@@ -31,15 +37,15 @@ bool Context::is_in_function(void) const {
 bool Context::has_error(void) const { return error_count > 0; }
 bool Context::has_warning(void) const { return warnings_count > 0; }
 
-void Context::declare(const std::string &name) { symbol_table.declare(name); }
-void Context::define(const std::string &name, SymbolType &&type, bool mut) {
+void Context::declare(const Token &name) { symbol_table.declare(name); }
+void Context::define(const Token &name, SymbolType &&type, bool mut) {
   symbol_table.define(name, std::move(type), mut);
 }
-void Context::define(const std::string &name, SymbolType &&type) {
+void Context::define(const Token &name, SymbolType &&type) {
   symbol_table.define(name, std::move(type));
 }
 
-Symbol *Context::local_first_look_up(const std::string &key) {
+Symbol *Context::local_first_look_up(const Token &key) {
   return symbol_table.local_first_look_up(key);
 }
 
@@ -48,53 +54,60 @@ void Context::scope_end(void) {
   SymbolTable::Scope &current_scope = symbol_table.get_current_scope();
   for (auto &symbol : current_scope) {
     if (!symbol.second.is_used())
-      report_warning(-1, -1, std::format("unused variable: `{}`", symbol.first),
-                     "");
+      report_warning(0, 0, 0, 1,
+                     std::format("unused variable: `{}`", symbol.first.value),
+                     "e");
   }
   symbol_table.scope_end();
 }
 
-void Context::report_error(std::size_t line, std::size_t column,
-                           const std::string &title,
+void Context::report_error(std::size_t line, std::size_t column, std::size_t at,
+                           std::size_t length, const std::string &title,
                            const std::string &desctiption) {
   error_count++;
-  std::cerr << "Semantic Error: " << title << "\n  in " << source_file << ":"
-            << line << ":" << column << "\n"
-            << desctiption << "\n";
+  m_reporter.report(ReporterType::SemanticError, title,
+                    {ReportLocation(line, column, at, length, desctiption)});
 }
 void Context::report_error(const Token &token, const std::string &title,
                            const std::string &desctiption) {
   error_count++;
-  std::cerr << "Semantic Error: " << title << "\n  in " << source_file << ":"
-            << token.line << ":" << token.column << "\n"
-            << desctiption << "\nNear to '" << token.value << "'\n";
+  m_reporter.report(ReporterType::SemanticError, title,
+                    {ReportLocation(token.line, token.column, token.at,
+                                    token.length, desctiption)});
 }
 
 void Context::report_warning(std::size_t line, std::size_t column,
+                             std::size_t at, std::size_t length,
                              const std::string &title,
                              const std::string &desctiption) {
   warnings_count++;
-  std::cerr << "Warning: " << title << "\n  in " << source_file << ":" << line
-            << ":" << column << "\n"
-            << desctiption << "\n";
+  m_reporter.report(ReporterType::Warning, title,
+                    {ReportLocation(line, column, at, length, desctiption)});
 }
 void Context::report_warning(const Token &token, const std::string &title,
                              const std::string &desctiption) {
   warnings_count++;
-  std::cerr << "Warning: " << title << "\n  in " << source_file << ":"
-            << token.line << ":" << token.column << "\n"
-            << desctiption << "\nNear to '" << token.value << "'\n";
+  m_reporter.report(ReporterType::Warning, title,
+                    {ReportLocation(token.line, token.column, token.at,
+                                    token.length, desctiption)});
 }
 
 void Context::report_summary(void) const {
   if (has_error())
-    std::cerr << "report summary: couldn't Compile " << source_file
-              << " due to " << error_count << " previous "
-              << (error_count == 1 ? "error." : "errors.") << '\n';
+    std::cerr << termcolor::blue << termcolor::bold << "report summary"
+              << termcolor::reset << termcolor::bold << ": couldn't Compile "
+              << termcolor::reset << termcolor::underline << source_file
+              << termcolor::reset << termcolor::bold << " due to "
+              << termcolor::red << error_count << " previous "
+              << (error_count == 1 ? "error" : "errors") << termcolor::reset
+              << ".\n";
   if (has_warning())
-    std::cerr << "Generated " << warnings_count
-              << (warnings_count == 0 ? " warning" : " warnings") << " in "
-              << source_file << "\n";
+    std::cerr << termcolor::bold << "Generated " << termcolor::yellow
+              << warnings_count
+              << (warnings_count == 1 ? " warning" : " warnings")
+              << termcolor::reset << termcolor::bold << " in "
+              << termcolor::reset << termcolor::underline << source_file
+              << termcolor::reset << ".\n";
 }
 
 } // namespace Analysis

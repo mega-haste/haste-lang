@@ -3,15 +3,11 @@
 #include "tokens.hpp"
 #include <cstddef>
 #include <format>
-#include <memory>
 #include <string>
 #include <variant>
 
 namespace Analysis {
 
-Symbol::Symbol()
-    : type(std::make_shared<SymbolType>(NativeType::Unknown)), defined(false),
-      mut(false) {}
 Symbol::Symbol(SymbolHandler &&type, bool defined, bool mut)
     : type(std::move(type)), defined(defined), mut(mut) {}
 bool Symbol::is_used(void) const { return uses > 0; }
@@ -24,11 +20,11 @@ SymbolArrayType::SymbolArrayType(SymbolHandler &&type, int size, int dimention)
 
 SymbolIdentifierType::SymbolIdentifierType(std::string ident) : ident(ident) {}
 
-SymbolFunctionType::Arg::Arg(std::string key, SymbolHandler &&type)
-    : key(key), type(std::move(type)) {}
-SymbolFunctionType::Arg::Arg(std::string key, SymbolHandler &&type,
+SymbolFunctionType::Arg::Arg(const Token &ident, SymbolHandler &&type)
+    : key(ident), type(std::move(type)) {}
+SymbolFunctionType::Arg::Arg(const Token &ident, SymbolHandler &&type,
                              bool has_default)
-    : key(key), type(std::move(type)), has_default(has_default) {}
+    : key(ident), type(std::move(type)), has_default(has_default) {}
 bool SymbolFunctionType::Arg::operator==(const Arg &other) const {
   return match(type, other.type);
 }
