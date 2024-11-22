@@ -206,27 +206,27 @@ std::string prettify(SymbolType &type) {
     NativeType ntype = std::get<NativeType>(type);
     switch (ntype) {
     case NativeType::Unknown:
-      return "Unknown";
+      return "unknown";
     case NativeType::Undefined:
-      return "Undefined";
+      return "undefined";
     case NativeType::Auto:
-      return "Auto";
+      return "auto";
     case NativeType::Void:
-      return "Void";
+      return "void";
     case NativeType::Number:
-      return "Number";
+      return "number";
     case NativeType::Int:
-      return "Int";
+      return "int";
     case NativeType::UInt:
-      return "UInt";
+      return "uint";
     case NativeType::Float:
-      return "Float";
+      return "float";
     case NativeType::Bool:
-      return "Bool";
+      return "bool";
     case NativeType::String:
-      return "String";
+      return "string";
     case NativeType::Char:
-      return "Char";
+      return "char";
     }
   }
   return "BAD";

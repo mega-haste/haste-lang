@@ -146,7 +146,10 @@ void LetDef::analyse(Analysis::Context &ctx) const {
   }
 
   if (!Analysis::match(expected_type, value_type)) {
-    ctx.report_error(ident, "Unknown type",
+    LOG(end.to_string() << "  " << start.to_string());
+    LOG(end.at << " - " << start.at << " = " << end.at - start.at);
+    ctx.report_error(start.line, start.column, start.at, end.at - start.at,
+                     "Unknown type",
                      "Your variable types doesn't match the value type. Try "
                      "implicit type inference or use `auto` instead.");
     return;

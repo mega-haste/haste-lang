@@ -77,6 +77,7 @@ TokenList Scanner::scan_line(void) {
   while (!at_end()) {
     m_start = m_current;
     char c = advance();
+    m_index_start += m_index_end - m_index_start;
     switch (c) {
     case '(':
       add_token(TokenType::OpenParen);
@@ -252,8 +253,8 @@ void Scanner::add_token(TokenType type) {
 }
 
 void Scanner::add_token(TokenType type, std::string value) {
-  m_tokens.push_back(Token(type, value, m_line, m_column, m_index_start,
-                           m_index_end - m_index_start));
+  m_tokens.push_back(
+      Token(type, value, m_line, m_column, m_index_start, m_current - m_start));
   m_column += value.size();
 }
 

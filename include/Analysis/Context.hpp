@@ -51,6 +51,8 @@ public:
   void report_warning(std::size_t line, std::size_t column, std::size_t at,
                       std::size_t length, const std::string &title,
                       const std::string &desctiption);
+  void report_warning(const Token &token, char caret, const std::string &title,
+                      const std::string &desctiption);
   void report_warning(const Token &token, const std::string &title,
                       const std::string &desctiption);
 

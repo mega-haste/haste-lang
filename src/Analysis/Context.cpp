@@ -53,10 +53,11 @@ void Context::scope_begin(void) { symbol_table.scope_begin(); }
 void Context::scope_end(void) {
   SymbolTable::Scope &current_scope = symbol_table.get_current_scope();
   for (auto &symbol : current_scope) {
-    if (!symbol.second.is_used())
-      report_warning(0, 0, 0, 1,
+    if (not symbol.second.is_used()) {
+      report_warning(symbol.first, '~',
                      std::format("unused variable: `{}`", symbol.first.value),
-                     "e");
+                     "This variable never been used.");
+    }
   }
   symbol_table.scope_end();
 }
@@ -84,6 +85,14 @@ void Context::report_warning(std::size_t line, std::size_t column,
   m_reporter.report(ReporterType::Warning, title,
                     {ReportLocation(line, column, at, length, desctiption)});
 }
+void Context::report_warning(const Token &token, char caret,
+                             const std::string &title,
+                             const std::string &desctiption) {
+  warnings_count++;
+  m_reporter.report(ReporterType::Warning, title,
+                    {ReportLocation(token.line, token.column, token.at,
+                                    token.length, caret, desctiption)});
+}
 void Context::report_warning(const Token &token, const std::string &title,
                              const std::string &desctiption) {
   warnings_count++;
@@ -93,12 +102,13 @@ void Context::report_warning(const Token &token, const std::string &title,
 }
 
 void Context::report_summary(void) const {
+  if (has_error() or has_warning())
+    std::cerr << termcolor::blue << termcolor::bold << "Report summary"
+              << termcolor::reset << termcolor::bold << ": ";
   if (has_error())
-    std::cerr << termcolor::blue << termcolor::bold << "report summary"
-              << termcolor::reset << termcolor::bold << ": couldn't Compile "
-              << termcolor::reset << termcolor::underline << source_file
-              << termcolor::reset << termcolor::bold << " due to "
-              << termcolor::red << error_count << " previous "
+    std::cerr << "Couldn't Compile " << termcolor::reset << termcolor::underline
+              << source_file << termcolor::reset << termcolor::bold
+              << " due to " << termcolor::red << error_count << " previous "
               << (error_count == 1 ? "error" : "errors") << termcolor::reset
               << ".\n";
   if (has_warning())

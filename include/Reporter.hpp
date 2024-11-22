@@ -19,12 +19,15 @@ struct ReportLocation {
   std::size_t column;
   std::size_t at;
   std::size_t len = 0;
+  char caret = '^';
   const std::string &message;
 
   ReportLocation(std::size_t line_number, std::size_t column, std::size_t at,
                  const std::string &message);
   ReportLocation(std::size_t line_number, std::size_t column, std::size_t at,
                  std::size_t len, const std::string &message);
+  ReportLocation(std::size_t line_number, std::size_t column, std::size_t at,
+                 std::size_t len, char caret, const std::string &message);
 };
 
 class Reporter {

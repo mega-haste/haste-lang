@@ -1,5 +1,5 @@
 #include "Reporter.hpp"
-#include "common.hpp"
+#include "AST/Statments.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
@@ -16,6 +16,11 @@ ReportLocation::ReportLocation(std::size_t line_number, std::size_t column,
                                std::size_t at, std::size_t len,
                                const std::string &message)
     : line_number(line_number), column(column), at(at), len(len),
+      message(message) {}
+ReportLocation::ReportLocation(std::size_t line_number, std::size_t column,
+                               std::size_t at, std::size_t len, char caret,
+                               const std::string &message)
+    : line_number(line_number), column(column), at(at), len(len), caret(caret),
       message(message) {}
 
 Reporter::Reporter(std::ifstream &file,
@@ -56,7 +61,8 @@ void Reporter::report(const ReporterType report_type, const std::string &title,
     for (std::size_t i = 0; i < location.column - 1; ++i) {
       caretLine += " "; // Add spaces to move caret to the correct column
     }
-    caretLine += "^"; // The caret under the error
+    caretLine += AST::repeat_char(location.caret,
+                                  location.len); // The caret under the error
     std::cout << caretLine << "  " << location.message;
   }
 
@@ -89,6 +95,16 @@ std::string Reporter::get_line(std::size_t index) {
   if (m_file.fail()) {
     std::cerr << "Seek failed. Index out of bounds." << std::endl;
     return "";
+  }
+
+  char ch;
+  while (m_file.tellg() > 0) {
+    m_file.get(ch);
+    if (ch == '\n') {
+      // We've reached the beginning of the line
+      break;
+    }
+    m_file.seekg(-2, std::ios::cur); // Move one byte backward
   }
 
   std::getline(m_file, line);
