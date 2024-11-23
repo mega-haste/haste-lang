@@ -81,14 +81,13 @@ std::string FunctionDef::prettify(const int depth) const {
 }
 void FunctionDef::analyse(Analysis::Context &ctx) const {
   ctx.declare(identifier);
-  Analysis::SymbolFunctionType type = Analysis::SymbolFunctionType(
-      std::make_unique<SymbolType>(return_type->get_type()));
+  Analysis::SymbolFunctionType type =
+      Analysis::SymbolFunctionType(return_type->get_type());
   for (auto &argument : arguments) {
     type.args.push_back(Analysis::SymbolFunctionType::Arg(
-        argument.identifier,
-        std::make_shared<SymbolType>(argument.type->get_type())));
+        argument.identifier, argument.type->get_type()));
   }
-  ctx.define(identifier, type, false);
+  ctx.define(identifier, SymbolType(type), false);
 
   ctx.scope_begin();
 
@@ -117,16 +116,15 @@ std::string LetDef::prettify(const int depth) const {
 void LetDef::analyse(Analysis::Context &ctx) const {
   ctx.declare(ident);
 
-  SymbolType expected_type =
-      type.has_value() ? type.value()->get_type() : Analysis::NativeType::Auto;
-  SymbolType value_type =
-      value.has_value() ? value.value()->get_type(ctx) : NativeType::Undefined;
+  auto expected_type = IF type.has_value() THEN type.value()->get_type()
+                           ELSE Analysis::NativeType::Auto;
+  auto value_type = IF value.has_value() THEN value.value()->get_type(ctx)
+                        ELSE NativeType::Undefined;
 
-  if (Analysis::is_auto(expected_type)) {
-    expected_type = std::move(value_type);
+  if (expected_type.is_auto()) {
+    expected_type = value_type;
 
-    if (Analysis::is_auto(expected_type) ||
-        Analysis::is_undefined(expected_type)) {
+    if (expected_type.is_auto() or expected_type.is_undefined()) {
       ctx.report_error(ident, "Unknown type",
                        "You need either set a known-type value to the "
                        "variable, or explicitly set the type of the variable.");
@@ -138,14 +136,14 @@ void LetDef::analyse(Analysis::Context &ctx) const {
     return;
   }
 
-  if (Analysis::is_undefined(value_type)) {
+  if (value_type.is_undefined()) {
     ctx.report_error(ident, "Unknown type",
                      "You need either set a known-type value to the variable, "
                      "or explicitly set the type of the variable.");
     return;
   }
 
-  if (!Analysis::match(expected_type, value_type)) {
+  if (!expected_type.match(value_type)) {
     LOG(end.to_string() << "  " << start.to_string());
     LOG(end.at << " - " << start.at << " = " << end.at - start.at);
     ctx.report_error(start.line, start.column, start.at, end.at - start.at,
@@ -171,7 +169,7 @@ std::string IfStatement::prettify(const int depth) const {
                                            : "NONE");
 }
 void IfStatement::analyse(Analysis::Context &ctx) const {
-  if (!Analysis::is_bool(condition->get_type(ctx))) {
+  if (!condition->get_type(ctx).is_bool()) {
     std::cerr << "[" << "??" << ":" << "??" << "] "
               << "Expected it to be a boolean.\n";
     return;

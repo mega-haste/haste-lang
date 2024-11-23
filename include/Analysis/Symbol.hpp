@@ -12,6 +12,7 @@ namespace Analysis {
 class SymbolArrayType;
 class SymbolIdentifierType;
 class SymbolFunctionType;
+class Symbol;
 
 class Context;
 
@@ -33,34 +34,64 @@ enum class NativeType : char {
   Char,   // sizeof 1
 };
 
-using SymbolType = std::variant<NativeType, SymbolArrayType,
-                                SymbolIdentifierType, SymbolFunctionType>;
-using SymbolHandler = std::shared_ptr<SymbolType>;
+class SymbolType {
+public:
+  using Type = std::variant<NativeType, SymbolArrayType, SymbolIdentifierType,
+                            SymbolFunctionType>;
+  using Handler = std::shared_ptr<Type>;
+
+  Handler type;
+  bool mut = false;
+
+  SymbolType();
+  SymbolType(const Type &type);
+  SymbolType(const NativeType &type);
+
+  bool is_native() const;
+  bool is_array() const;
+  bool is_function() const;
+
+  bool is_auto() const;
+  bool is_undefined() const;
+  bool is_number() const;
+  bool is_bool() const;
+  bool is_string() const;
+
+  bool is(const NativeType type) const;
+  bool is(const SymbolArrayType type) const;
+  bool is(const SymbolFunctionType type) const;
+
+  bool match(const SymbolType &other) const;
+
+  std::string prettify() const;
+};
 
 class Symbol {
 public:
-  SymbolHandler type = std::make_shared<SymbolType>(NativeType::Unknown);
+  SymbolType type = NativeType::Unknown;
   bool defined = false;
-  bool mut = false;
   int uses = 0;
 
   Symbol() = default;
-  Symbol(SymbolHandler &&type, bool defined, bool mut);
-  ~Symbol() = default;
+  Symbol(SymbolType &&type, bool defined);
+  Symbol(SymbolType &&type, bool mut, bool defined);
+  Symbol(const SymbolType &type);
+  Symbol(const NativeType &type);
 
   bool is_used(void) const;
+  bool is_mutable() const;
 
   std::string prettify() const;
 };
 
 class SymbolArrayType {
 public:
-  SymbolHandler type;
+  SymbolType type;
   int size = 0;
   int dimention = 1;
 
-  SymbolArrayType(SymbolHandler &&type);
-  SymbolArrayType(SymbolHandler &&type, int size, int dimention);
+  SymbolArrayType(SymbolType &&type);
+  SymbolArrayType(SymbolType &&type, int size, int dimention);
 };
 
 class SymbolIdentifierType {
@@ -74,47 +105,31 @@ class SymbolFunctionType {
 public:
   struct Arg {
     const Token &key;
-    SymbolHandler type;
+    SymbolType type;
     bool has_default = true;
 
-    Arg(const Token &key, SymbolHandler &&type);
-    Arg(const Token &key, SymbolHandler &&type, bool has_default);
+    Arg(const Token &key, SymbolType &&type);
+    Arg(const Token &key, SymbolType &&type, bool has_default);
 
     bool operator==(const Arg &other) const;
     bool operator!=(const Arg &other) const;
   };
 
   std::vector<Arg> args;
-  SymbolHandler return_type;
+  SymbolType return_type;
 
-  SymbolFunctionType(SymbolHandler &&return_type);
-  SymbolFunctionType(std::vector<Arg> &&args, SymbolHandler &&return_type);
+  SymbolFunctionType(SymbolType &&return_type);
+  SymbolFunctionType(std::vector<Arg> &&args, SymbolType &&return_type);
 
   bool match_args(const std::vector<Arg> other_args) const;
   void define_args(Context &ctx) const;
 };
 
-bool is_native(const SymbolType &symbol);
-bool is_array(const SymbolType &symbol);
-bool is_function(const SymbolType &symbol);
-
-bool is_auto(const SymbolType &symbol);
-bool is_undefined(const SymbolType &symbol);
-bool is_number(const SymbolType &symbol);
-bool is_bool(const SymbolType &symbol);
-
-bool is(const SymbolType &symbol, const NativeType type);
-bool is(const SymbolType &symbol, const SymbolArrayType type);
-bool is(const SymbolType &symbol, const SymbolFunctionType type);
-
-bool match(const SymbolHandler &left, const SymbolHandler &right);
-bool match(const SymbolType &left, const SymbolType &right);
-
 SymbolType do_unary(const Token &op, const SymbolType &rhs);
 SymbolType do_binary(const SymbolType &lhs, const Token &op,
                      const SymbolType &rhs);
 
-std::string prettify(SymbolType &type);
+std::string prettify(const SymbolType &type);
 
 } // namespace Analysis
 

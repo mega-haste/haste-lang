@@ -2,6 +2,7 @@
 
 #include "Analysis/Context.hpp"
 #include "Analysis/Symbol.hpp"
+#include "Analysis/SymbolTable.hpp"
 #include "Expressions.hpp"
 #include "tokens.hpp"
 #include <cmath>
@@ -17,7 +18,7 @@ class StatementNode;
 
 using Statement = std::unique_ptr<StatementNode>;
 using Analysis::NativeType;
-using Analysis::SymbolHandler;
+using Analysis::SymbolTable;
 using Analysis::SymbolType;
 
 class StatementNode {

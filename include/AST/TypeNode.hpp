@@ -17,11 +17,13 @@ using Type = std::unique_ptr<TypeNode>;
 
 class TypeNode {
 public:
+  using TypeResult = Analysis::SymbolType;
+
   Token start;
   Token end;
 
   virtual const std::string prettify() const = 0;
-  virtual SymbolType get_type(void) const;
+  virtual TypeResult get_type(void) const;
 
   virtual ~TypeNode() = default;
 };
@@ -32,7 +34,7 @@ public:
 
   explicit TypeLiteral(const Token &value);
   const std::string prettify() const override;
-  SymbolType get_type(void) const override;
+  TypeResult get_type(void) const override;
 };
 
 class ArrayType : public TypeNode {
@@ -44,13 +46,13 @@ public:
   explicit ArrayType(Type &&type, std::optional<Token> size);
   explicit ArrayType(Type &&type, std::optional<Token> size, int dimention);
   const std::string prettify() const override;
-  SymbolType get_type(void) const override;
+  TypeResult get_type(void) const override;
 };
 
 class UndefinedType : public TypeNode {
 public:
   const std::string prettify() const override;
-  SymbolType get_type(void) const override;
+  TypeResult get_type(void) const override;
 };
 
 class TypedIdentifier {

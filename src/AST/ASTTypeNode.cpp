@@ -10,16 +10,15 @@
 namespace AST {
 
 using Analysis::NativeType;
-using Analysis::SymbolType;
 using Type = std::unique_ptr<TypeNode>;
 
-SymbolType TypeNode::get_type(void) const { return NativeType::Auto; }
+TypeNode::TypeResult TypeNode::get_type(void) const { return NativeType::Auto; }
 
 TypeLiteral::TypeLiteral(const Token &value) : value(std::move(value)) {}
 const std::string TypeLiteral::prettify() const {
   return std::format("(type_lit {})", value.value);
 }
-SymbolType TypeLiteral::get_type(void) const {
+TypeNode::TypeResult TypeLiteral::get_type(void) const {
   switch (value.type) {
   case TokenType::Bool:
     return NativeType::Bool;
@@ -50,16 +49,18 @@ const std::string ArrayType::prettify() const {
   return std::format("(array {}[{}])", type->prettify(),
                      size.has_value() ? size.value().value : "auto");
 }
-SymbolType ArrayType::get_type(void) const {
-  return Analysis::SymbolArrayType(
-      std::make_unique<SymbolType>(type->get_type()),
-      size.has_value() ? std::stoi(size.value().value) : 1, dimention);
+TypeNode::TypeResult ArrayType::get_type(void) const {
+  return TypeNode::TypeResult(Analysis::SymbolArrayType(
+      type->get_type(), size.has_value() ? std::stoi(size.value().value) : 1,
+      dimention));
 }
 
 const std::string UndefinedType::prettify() const {
   return std::format("(undefined_type)");
 }
-SymbolType UndefinedType::get_type(void) const { return NativeType::Undefined; }
+TypeNode::TypeResult UndefinedType::get_type(void) const {
+  return NativeType::Undefined;
+}
 
 TypedIdentifier::TypedIdentifier(const Token &identifier, Type &&type)
     : identifier(identifier), type(std::move(type)) {}

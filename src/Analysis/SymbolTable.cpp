@@ -1,13 +1,11 @@
 #include "Analysis/SymbolTable.hpp"
 #include "Analysis/Symbol.hpp"
 #include "tokens.hpp"
-#include <algorithm>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <format>
 #include <iostream>
-#include <memory>
 #include <stdexcept>
 
 namespace Analysis {
@@ -21,7 +19,7 @@ void SymbolTable::print_table(void) const {
     std::cout << "\n>>>> Scope " << i << ":\n";
     for (auto &symbol : scope) {
       std::cout << symbol.first.value << ": "
-                << (symbol.second.mut ? "mut" : "immut") << " "
+                << (symbol.second.is_mutable() ? "mut" : "immut") << " "
                 << symbol.second.prettify() << " - ";
     }
     i++;
@@ -31,8 +29,7 @@ void SymbolTable::print_table(void) const {
 }
 
 void SymbolTable::declare(const Token &ident) {
-  scopes.back()[ident] =
-      Symbol(std::make_shared<SymbolType>(NativeType::Unknown), false, false);
+  scopes.back()[ident] = Symbol(NativeType::Unknown, false, false);
 }
 
 void SymbolTable::define(const Token &ident, SymbolType &&type, bool mut) {
@@ -43,9 +40,9 @@ void SymbolTable::define(const Token &ident, SymbolType &&type, bool mut) {
                                        ident.value, ident.value));
 
   Symbol &the_symbol = current_scope[ident];
-  the_symbol.type = std::make_unique<SymbolType>(std::move(type));
+  the_symbol.type = SymbolType(std::move(type));
   the_symbol.defined = true;
-  the_symbol.mut = mut;
+  the_symbol.type.mut = mut;
 }
 
 void SymbolTable::scope_begin(void) { scopes.push_back(Scope()); }

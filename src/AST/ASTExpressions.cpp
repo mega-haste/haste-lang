@@ -6,19 +6,19 @@
 #include <cstddef>
 #include <cstdlib>
 #include <format>
+#include <memory>
 #include <string>
 
 namespace AST {
 using Analysis::NativeType;
-using Analysis::SymbolHandler;
-using Analysis::SymbolType;
 
 void ExpressionNode::analyse(Analysis::Context &ctx) const { UNUSED(ctx); };
 
 std::string ExpressionNone::prettify() const { return "(NONE)"; }
-SymbolType ExpressionNone::get_type(Analysis::Context &ctx) const {
+ExpressionNode::TypeResult
+ExpressionNone::get_type(Analysis::Context &ctx) const {
   UNUSED(ctx);
-  return Analysis::NativeType::Unknown;
+  return ExpressionNode::TypeResult();
 }
 
 LiteralExpression::LiteralExpression(const Token &v) : value(v) {}
@@ -36,7 +36,8 @@ std::string LiteralExpression::prettify(void) const {
     std::exit(70);
   }
 }
-SymbolType LiteralExpression::get_type(Analysis::Context &ctx) const {
+ExpressionNode::TypeResult
+LiteralExpression::get_type(Analysis::Context &ctx) const {
   UNUSED(ctx);
   switch (value.type) {
   case TokenType::CharLit:
@@ -56,7 +57,8 @@ BooleanExpression::BooleanExpression(bool v) : value(v) {}
 std::string BooleanExpression::prettify(void) const {
   return value ? "(bool true)" : "(bool false)";
 }
-SymbolType BooleanExpression::get_type(Analysis::Context &ctx) const {
+ExpressionNode::TypeResult
+BooleanExpression::get_type(Analysis::Context &ctx) const {
   UNUSED(ctx);
   return NativeType::Bool;
 }
@@ -66,11 +68,12 @@ UnaryExpression::UnaryExpression(const Token &op, Expression &&rhs)
 std::string UnaryExpression::prettify(void) const {
   return std::format("(unary {} {})", op.value, rhs->prettify());
 }
-SymbolType UnaryExpression::get_type(Analysis::Context &ctx) const {
-  return Analysis::do_unary(op, rhs->get_type(ctx));
+ExpressionNode::TypeResult
+UnaryExpression::get_type(Analysis::Context &ctx) const {
+  return Analysis::do_unary(op, *rhs->get_type(ctx).type);
 }
 void UnaryExpression::analyse(Analysis::Context &ctx) const {
-  // TODO
+  // TODO: Implement Analyse for Unaries
   rhs->analyse(ctx);
 }
 
@@ -81,11 +84,13 @@ std::string BinaryExpression::prettify(void) const {
   return std::format("(binary {} {} {})", lhs->prettify(), op.value,
                      rhs->prettify());
 }
-SymbolType BinaryExpression::get_type(Analysis::Context &ctx) const {
-  return Analysis::do_binary(lhs->get_type(ctx), op, rhs->get_type(ctx));
+ExpressionNode::TypeResult
+BinaryExpression::get_type(Analysis::Context &ctx) const {
+  return Analysis::do_binary(*lhs->get_type(ctx).type, op,
+                             *rhs->get_type(ctx).type);
 }
 void BinaryExpression::analyse(Analysis::Context &ctx) const {
-  // TODO
+  // TODO: Analyse binary expressions
   lhs->analyse(ctx);
   rhs->analyse(ctx);
 }
@@ -95,7 +100,8 @@ GroupingExpression::GroupingExpression(Expression &&expr)
 std::string GroupingExpression::prettify(void) const {
   return std::format("(grouping {})", expr->prettify());
 }
-SymbolType GroupingExpression::get_type(Analysis::Context &ctx) const {
+ExpressionNode::TypeResult
+GroupingExpression::get_type(Analysis::Context &ctx) const {
   return expr->get_type(ctx);
 }
 void GroupingExpression::analyse(Analysis::Context &ctx) const {
@@ -111,12 +117,12 @@ std::string InlineIf::prettify(void) const {
   return std::format("(if {} then {} else {})", condition->prettify(),
                      consequent->prettify(), alternate->prettify());
 }
-SymbolType InlineIf::get_type(Analysis::Context &ctx) const {
+ExpressionNode::TypeResult InlineIf::get_type(Analysis::Context &ctx) const {
   return consequent->get_type(ctx);
 }
 void InlineIf::analyse(Analysis::Context &ctx) const {
-  SymbolType condition_type = condition->get_type(ctx);
-  if (!Analysis::is_bool(condition_type)) {
+  ExpressionNode::TypeResult condition_type = condition->get_type(ctx);
+  if (!condition_type.is_bool()) {
     UNIMPLEMENTED("InlineIf analysis (condition checking)");
   }
   consequent->analyse(ctx);
@@ -128,7 +134,8 @@ AsExpression::AsExpression(Expression &&expr, Type &&type)
 std::string AsExpression::prettify(void) const {
   return std::format("(as {} {})", expr->prettify(), type->prettify());
 }
-SymbolType AsExpression::get_type(Analysis::Context &ctx) const {
+ExpressionNode::TypeResult
+AsExpression::get_type(Analysis::Context &ctx) const {
   UNUSED(ctx);
   return type->get_type();
 }
@@ -145,13 +152,14 @@ std::string IdentifierExpression::prettify(void) const {
     std::exit(70);
   }
 }
-SymbolType IdentifierExpression::get_type(Analysis::Context &ctx) const {
+ExpressionNode::TypeResult
+IdentifierExpression::get_type(Analysis::Context &ctx) const {
   if (ctx.is_defined(value)) {
     Analysis::Symbol *symbol = ctx.symbol_table.local_first_look_up(value);
     symbol->uses++;
-    return *symbol->type;
+    return symbol->type;
   }
-  return NativeType::Unknown;
+  return ExpressionNode::TypeResult();
 }
 void IdentifierExpression::analyse(Analysis::Context &ctx) const {
   if (ctx.is_defined(value)) {
@@ -179,25 +187,26 @@ std::string CallExpression::prettify(void) const {
   return std::format("(call {}({}))", callee->prettify(), arg_str);
 }
 
-SymbolType CallExpression::get_type(Analysis::Context &ctx) const {
-  SymbolType callee_symbol = callee->get_type(ctx);
-  if (Analysis::is_function(callee_symbol)) {
+ExpressionNode::TypeResult
+CallExpression::get_type(Analysis::Context &ctx) const {
+  ExpressionNode::TypeResult callee_symbol = callee->get_type(ctx);
+  if (callee_symbol.is_function()) {
     Analysis::SymbolFunctionType &callee_as_func_type =
-        std::get<Analysis::SymbolFunctionType>(callee_symbol);
-    return *callee_as_func_type.return_type;
+        std::get<Analysis::SymbolFunctionType>(*callee_symbol.type);
+    return callee_as_func_type.return_type;
   }
   return NativeType::Unknown;
 }
 
 void CallExpression::analyse(Analysis::Context &ctx) const {
   callee->analyse(ctx);
-  SymbolType callee_type = callee->get_type(ctx);
-  if (!Analysis::is_function(callee_type)) {
+  ExpressionNode::TypeResult callee_type = callee->get_type(ctx);
+  if (!callee_type.is_function()) {
     ctx.report_error(paren, "Type Error", "Should be a function type.");
     return;
   }
   Analysis::SymbolFunctionType &callee_func =
-      std::get<Analysis::SymbolFunctionType>(callee_type);
+      std::get<Analysis::SymbolFunctionType>(*callee_type.type);
   if (arguments.size() != callee_func.args.size()) {
     ctx.report_error(
         paren, "Argument Error",
@@ -209,14 +218,14 @@ void CallExpression::analyse(Analysis::Context &ctx) const {
     auto &argument = arguments[i];
 
     argument->analyse(ctx);
-    SymbolType argument_type = argument->get_type(ctx);
+    ExpressionNode::TypeResult argument_type = argument->get_type(ctx);
     auto &target_arg_type = callee_func.args[i];
-    if (!Analysis::match(argument_type, *target_arg_type.type)) {
+    if (!argument_type.match(target_arg_type.type)) {
       ctx.report_error(argument->start, "Argument Error",
                        std::format("the {} argument didn't match the expected "
                                    "type `{}`, got `{}` instead.",
                                    i + 1,
-                                   Analysis::prettify(*target_arg_type.type),
+                                   Analysis::prettify(target_arg_type.type),
                                    Analysis::prettify(argument_type)));
     }
   }
@@ -229,7 +238,8 @@ MemberAccessExpression::MemberAccessExpression(Expression &&group,
 std::string MemberAccessExpression::prettify(void) const {
   return std::format("(access {} {})", group->prettify(), member.value);
 }
-SymbolType MemberAccessExpression::get_type(Analysis::Context &ctx) const {
+ExpressionNode::TypeResult
+MemberAccessExpression::get_type(Analysis::Context &ctx) const {
   UNUSED(ctx);
   UNIMPLEMENTED("MemberAccessExpression");
 }
@@ -243,7 +253,8 @@ SubscriptingExpression::SubscriptingExpression(Expression &&item,
 std::string SubscriptingExpression::prettify(void) const {
   return std::format("(subscript {} {})", item->prettify(), index->prettify());
 }
-SymbolType SubscriptingExpression::get_type(Analysis::Context &ctx) const {
+ExpressionNode::TypeResult
+SubscriptingExpression::get_type(Analysis::Context &ctx) const {
   UNUSED(ctx);
   UNIMPLEMENTED("SubscriptingExpression");
 }
@@ -265,7 +276,8 @@ std::string TupleExpression::prettify(void) const {
 
   return std::format("(tuple ({}))", ele_str);
 }
-SymbolType TupleExpression::get_type(Analysis::Context &ctx) const {
+ExpressionNode::TypeResult
+TupleExpression::get_type(Analysis::Context &ctx) const {
   UNUSED(ctx);
   UNIMPLEMENTED("Tuple");
 }
@@ -278,7 +290,8 @@ std::string ScopeResolutionExpression::prettify(void) const {
   return std::format("(scope_resolution {} {})", group->prettify(),
                      member.value);
 }
-SymbolType ScopeResolutionExpression::get_type(Analysis::Context &ctx) const {
+ExpressionNode::TypeResult
+ScopeResolutionExpression::get_type(Analysis::Context &ctx) const {
   UNUSED(ctx);
   UNIMPLEMENTED("ScopeResolutionExpression");
 }
@@ -291,16 +304,19 @@ std::string AssignExpression::prettify(void) const {
   return std::format("(assign {} {} {})", lhs->prettify(), eq.value,
                      value->prettify());
 }
-SymbolType AssignExpression::get_type(Analysis::Context &ctx) const {
+ExpressionNode::TypeResult
+AssignExpression::get_type(Analysis::Context &ctx) const {
   return lhs->get_type(ctx);
 }
 void AssignExpression::analyse(Analysis::Context &ctx) const {
-  // TODO
+  // TODO: Checking for mutability
   lhs->analyse(ctx);
   value->analyse(ctx);
-  SymbolType lhs_type = lhs->get_type(ctx);
-  SymbolType rhs_type = value->get_type(ctx);
-  if (!Analysis::match(lhs_type, rhs_type)) {
+
+  ExpressionNode::TypeResult lhs_type = lhs->get_type(ctx);
+  ExpressionNode::TypeResult rhs_type = value->get_type(ctx);
+
+  if (!lhs_type.match(rhs_type)) {
     ctx.report_error(eq, "Mismatched types",
                      std::format("Expected rvalue to be '{}' got '{}'.",
                                  Analysis::prettify(lhs_type),
