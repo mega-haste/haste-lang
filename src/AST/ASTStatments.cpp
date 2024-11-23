@@ -118,11 +118,11 @@ void LetDef::analyse(Analysis::Context &ctx) const {
 
   auto expected_type = IF type.has_value() THEN type.value()->get_type()
                            ELSE Analysis::NativeType::Auto;
-  auto value_type = IF value.has_value() THEN value.value()->get_type(ctx)
-                        ELSE NativeType::Undefined;
+  auto value_type = IF value.has_value() THEN value.value()->get_type(
+      ctx) ELSE ExpressionNode::make_type_result(NativeType::Undefined);
 
   if (expected_type.is_auto()) {
-    expected_type = value_type;
+    expected_type = *value_type;
 
     if (expected_type.is_auto() or expected_type.is_undefined()) {
       ctx.report_error(ident, "Unknown type",
@@ -136,14 +136,7 @@ void LetDef::analyse(Analysis::Context &ctx) const {
     return;
   }
 
-  if (value_type.is_undefined()) {
-    ctx.report_error(ident, "Unknown type",
-                     "You need either set a known-type value to the variable, "
-                     "or explicitly set the type of the variable.");
-    return;
-  }
-
-  if (!expected_type.match(value_type)) {
+  if (value.has_value() and !expected_type.match(*value_type)) {
     LOG(end.to_string() << "  " << start.to_string());
     LOG(end.at << " - " << start.at << " = " << end.at - start.at);
     ctx.report_error(start.line, start.column, start.at, end.at - start.at,
@@ -153,8 +146,12 @@ void LetDef::analyse(Analysis::Context &ctx) const {
     return;
   }
 
-  if (value.has_value())
+  if (value.has_value()) {
     value.value()->analyse(ctx);
+    expected_type.assigned = true;
+  } else {
+    expected_type.assigned = false;
+  }
   ctx.define(ident, std::move(expected_type), mut);
 }
 
@@ -169,7 +166,7 @@ std::string IfStatement::prettify(const int depth) const {
                                            : "NONE");
 }
 void IfStatement::analyse(Analysis::Context &ctx) const {
-  if (!condition->get_type(ctx).is_bool()) {
+  if (!condition->get_type(ctx)->is_bool()) {
     std::cerr << "[" << "??" << ":" << "??" << "] "
               << "Expected it to be a boolean.\n";
     return;

@@ -41,15 +41,15 @@ LiteralExpression::get_type(Analysis::Context &ctx) const {
   UNUSED(ctx);
   switch (value.type) {
   case TokenType::CharLit:
-    return NativeType::Char;
+    return ExpressionNode::make_type_result(NativeType::Char);
   case TokenType::StringLit:
-    return NativeType::String;
+    return ExpressionNode::make_type_result(NativeType::String);
   case TokenType::IntLit:
-    return NativeType::Int;
+    return ExpressionNode::make_type_result(NativeType::Int);
   case TokenType::FloatLit:
-    return NativeType::Float;
+    return ExpressionNode::make_type_result(NativeType::Float);
   default:
-    return NativeType::Unknown;
+    return ExpressionNode::make_type_result(NativeType::Unknown);
   }
 }
 
@@ -60,7 +60,7 @@ std::string BooleanExpression::prettify(void) const {
 ExpressionNode::TypeResult
 BooleanExpression::get_type(Analysis::Context &ctx) const {
   UNUSED(ctx);
-  return NativeType::Bool;
+  return ExpressionNode::make_type_result(NativeType::Bool);
 }
 
 UnaryExpression::UnaryExpression(const Token &op, Expression &&rhs)
@@ -70,7 +70,8 @@ std::string UnaryExpression::prettify(void) const {
 }
 ExpressionNode::TypeResult
 UnaryExpression::get_type(Analysis::Context &ctx) const {
-  return Analysis::do_unary(op, *rhs->get_type(ctx).type);
+  return ExpressionNode::make_type_result(
+      Analysis::do_unary(op, *rhs->get_type(ctx)->type));
 }
 void UnaryExpression::analyse(Analysis::Context &ctx) const {
   // TODO: Implement Analyse for Unaries
@@ -86,8 +87,8 @@ std::string BinaryExpression::prettify(void) const {
 }
 ExpressionNode::TypeResult
 BinaryExpression::get_type(Analysis::Context &ctx) const {
-  return Analysis::do_binary(*lhs->get_type(ctx).type, op,
-                             *rhs->get_type(ctx).type);
+  return ExpressionNode::make_type_result(Analysis::do_binary(
+      *lhs->get_type(ctx)->type, op, *rhs->get_type(ctx)->type));
 }
 void BinaryExpression::analyse(Analysis::Context &ctx) const {
   // TODO: Analyse binary expressions
@@ -122,7 +123,7 @@ ExpressionNode::TypeResult InlineIf::get_type(Analysis::Context &ctx) const {
 }
 void InlineIf::analyse(Analysis::Context &ctx) const {
   ExpressionNode::TypeResult condition_type = condition->get_type(ctx);
-  if (!condition_type.is_bool()) {
+  if (!condition_type->is_bool()) {
     UNIMPLEMENTED("InlineIf analysis (condition checking)");
   }
   consequent->analyse(ctx);
@@ -137,7 +138,7 @@ std::string AsExpression::prettify(void) const {
 ExpressionNode::TypeResult
 AsExpression::get_type(Analysis::Context &ctx) const {
   UNUSED(ctx);
-  return type->get_type();
+  return ExpressionNode::make_type_result(type->get_type());
 }
 void AsExpression::analyse(Analysis::Context &ctx) const { expr->analyse(ctx); }
 
@@ -190,23 +191,23 @@ std::string CallExpression::prettify(void) const {
 ExpressionNode::TypeResult
 CallExpression::get_type(Analysis::Context &ctx) const {
   ExpressionNode::TypeResult callee_symbol = callee->get_type(ctx);
-  if (callee_symbol.is_function()) {
+  if (callee_symbol->is_function()) {
     Analysis::SymbolFunctionType &callee_as_func_type =
-        std::get<Analysis::SymbolFunctionType>(*callee_symbol.type);
-    return callee_as_func_type.return_type;
+        std::get<Analysis::SymbolFunctionType>(*callee_symbol->type);
+    return ExpressionNode::make_type_result(callee_as_func_type.return_type);
   }
-  return NativeType::Unknown;
+  return ExpressionNode::make_type_result(NativeType::Unknown);
 }
 
 void CallExpression::analyse(Analysis::Context &ctx) const {
   callee->analyse(ctx);
   ExpressionNode::TypeResult callee_type = callee->get_type(ctx);
-  if (!callee_type.is_function()) {
+  if (!callee_type->is_function()) {
     ctx.report_error(paren, "Type Error", "Should be a function type.");
     return;
   }
   Analysis::SymbolFunctionType &callee_func =
-      std::get<Analysis::SymbolFunctionType>(*callee_type.type);
+      std::get<Analysis::SymbolFunctionType>(*callee_type->type);
   if (arguments.size() != callee_func.args.size()) {
     ctx.report_error(
         paren, "Argument Error",
@@ -220,13 +221,13 @@ void CallExpression::analyse(Analysis::Context &ctx) const {
     argument->analyse(ctx);
     ExpressionNode::TypeResult argument_type = argument->get_type(ctx);
     auto &target_arg_type = callee_func.args[i];
-    if (!argument_type.match(target_arg_type.type)) {
+    if (!argument_type->match(target_arg_type.type)) {
       ctx.report_error(argument->start, "Argument Error",
                        std::format("the {} argument didn't match the expected "
                                    "type `{}`, got `{}` instead.",
                                    i + 1,
                                    Analysis::prettify(target_arg_type.type),
-                                   Analysis::prettify(argument_type)));
+                                   Analysis::prettify(*argument_type)));
     }
   }
 }
@@ -309,19 +310,26 @@ AssignExpression::get_type(Analysis::Context &ctx) const {
   return lhs->get_type(ctx);
 }
 void AssignExpression::analyse(Analysis::Context &ctx) const {
-  // TODO: Checking for mutability
   lhs->analyse(ctx);
   value->analyse(ctx);
 
   ExpressionNode::TypeResult lhs_type = lhs->get_type(ctx);
   ExpressionNode::TypeResult rhs_type = value->get_type(ctx);
 
-  if (!lhs_type.match(rhs_type)) {
-    ctx.report_error(eq, "Mismatched types",
-                     std::format("Expected rvalue to be '{}' got '{}'.",
-                                 Analysis::prettify(lhs_type),
-                                 Analysis::prettify(rhs_type)));
+  if (!rhs_type->mut and lhs_type->assigned) {
+    ctx.report_error(lhs->start, "Double assignment to a immutable variable.",
+                     "Cannot assign twice to a immutable. Use `mut` in the "
+                     "variable declaration.");
   }
+
+  if (!lhs_type->match(*rhs_type)) {
+    ctx.report_error(value->start, "Mismatched types",
+                     std::format("Expected to be '{}' got '{}'.",
+                                 Analysis::prettify(*lhs_type),
+                                 Analysis::prettify(*rhs_type)));
+  }
+
+  lhs_type->assigned = true;
 }
 
 } // namespace AST

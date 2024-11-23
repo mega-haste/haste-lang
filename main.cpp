@@ -1,3 +1,5 @@
+#define TABLE_PRINT
+
 #include "Compiler.hpp"
 #include "common.hpp"
 

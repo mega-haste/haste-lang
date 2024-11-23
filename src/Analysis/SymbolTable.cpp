@@ -1,5 +1,6 @@
 #include "Analysis/SymbolTable.hpp"
 #include "Analysis/Symbol.hpp"
+#include "common.hpp"
 #include "tokens.hpp"
 #include <cstddef>
 #include <cstdio>
@@ -19,8 +20,11 @@ void SymbolTable::print_table(void) const {
     std::cout << "\n>>>> Scope " << i << ":\n";
     for (auto &symbol : scope) {
       std::cout << symbol.first.value << ": "
-                << (symbol.second.is_mutable() ? "mut" : "immut") << " "
-                << symbol.second.prettify() << " - ";
+                << (IF symbol.second.is_mutable() THEN "mut" ELSE "immut")
+                << " "
+                << (IF symbol.second.type->assigned THEN "assigned" ELSE
+                                                         "not_assigned")
+                << " " << symbol.second.prettify() << " - ";
     }
     i++;
   }
@@ -40,14 +44,16 @@ void SymbolTable::define(const Token &ident, SymbolType &&type, bool mut) {
                                        ident.value, ident.value));
 
   Symbol &the_symbol = current_scope[ident];
-  the_symbol.type = SymbolType(std::move(type));
+  *the_symbol.type = std::move(type);
   the_symbol.defined = true;
-  the_symbol.type.mut = mut;
+  the_symbol.type->mut = mut;
 }
 
 void SymbolTable::scope_begin(void) { scopes.push_back(Scope()); }
 void SymbolTable::scope_end(void) {
-  // print_table();
+#ifdef TABLE_PRINT
+  print_table();
+#endif // TABLE_PRINT
   scopes.pop_back();
 }
 

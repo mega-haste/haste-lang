@@ -9,14 +9,13 @@
 namespace Analysis {
 
 class SymbolTable {
-private:
-  void print_table(void) const;
-
 public:
   using Scope = std::unordered_map<Token, Symbol>;
   std::deque<Scope> scopes;
 
   SymbolTable();
+
+  void print_table(void) const;
 
   void declare(const Token &ident);
   void define(const Token &ident, SymbolType &&type, bool mut = false);

@@ -42,6 +42,7 @@ public:
 
   Handler type;
   bool mut = false;
+  bool assigned = false;
 
   SymbolType();
   SymbolType(const Type &type);
@@ -68,7 +69,8 @@ public:
 
 class Symbol {
 public:
-  SymbolType type = NativeType::Unknown;
+  std::shared_ptr<SymbolType> type =
+      std::make_shared<SymbolType>(NativeType::Unknown);
   bool defined = false;
   int uses = 0;
 

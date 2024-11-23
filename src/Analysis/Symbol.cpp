@@ -95,16 +95,18 @@ std::string SymbolType::prettify() const {
 }
 
 Symbol::Symbol(SymbolType &&type, bool defined)
-    : type(std::move(type)), defined(defined) {}
+    : type(std::make_shared<SymbolType>(std::move(type))), defined(defined) {}
 Symbol::Symbol(SymbolType &&type, bool mut, bool defined)
-    : type(std::move(type)), defined(defined) {
+    : type(std::make_shared<SymbolType>(std::move(type))), defined(defined) {
   type.mut = mut;
 }
-Symbol::Symbol(const SymbolType &type) : type(type) {}
-Symbol::Symbol(const NativeType &type) : type(type) {}
+Symbol::Symbol(const SymbolType &type)
+    : type(std::make_shared<SymbolType>(type)) {}
+Symbol::Symbol(const NativeType &type)
+    : type(std::make_shared<SymbolType>(type)) {}
 bool Symbol::is_used(void) const { return uses > 0; }
-bool Symbol::is_mutable() const { return type.mut; }
-std::string Symbol::prettify() const { return type.prettify(); }
+bool Symbol::is_mutable() const { return type->mut; }
+std::string Symbol::prettify() const { return type->prettify(); }
 
 SymbolArrayType::SymbolArrayType(SymbolType &&type) : type(std::move(type)) {}
 SymbolArrayType::SymbolArrayType(SymbolType &&type, int size, int dimention)
@@ -148,98 +150,6 @@ void SymbolFunctionType::define_args(Context &ctx) const {
   }
 }
 
-// bool is_native(const SymbolType &symbol) {
-//   return std::holds_alternative<NativeType>(*symbol.type);
-// }
-// bool is_array(const SymbolType &symbol) {
-//   return std::holds_alternative<SymbolFunctionType>(*symbol.type);
-// }
-// bool is_function(const SymbolType &symbol) {
-//   return std::holds_alternative<SymbolFunctionType>(*symbol.type);
-// }
-//
-// bool is_auto(const SymbolType &symbol) {
-//   if (!is_native(symbol))
-//     return false;
-//   NativeType type = std::get<NativeType>(*symbol.type);
-//   return type == NativeType::Auto;
-// }
-//
-// bool is_undefined(const SymbolType &symbol) {
-//   if (!std::holds_alternative<NativeType>(*symbol.type))
-//     return false;
-//   NativeType type = std::get<NativeType>(*symbol.type);
-//   return type == NativeType::Undefined;
-// }
-//
-// bool is_number(const SymbolType &symbol) {
-//   if (!std::holds_alternative<NativeType>(*symbol.type))
-//     return false;
-//   NativeType type = std::get<NativeType>(*symbol.type);
-//   return type == NativeType::Float || type == NativeType::Int ||
-//          type == NativeType::UInt || type == NativeType::Char ||
-//          type == NativeType::Number;
-// }
-//
-// bool is_bool(const SymbolType &symbol) {
-//   if (!std::holds_alternative<NativeType>(*symbol.type))
-//     return false;
-//   NativeType type = std::get<NativeType>(*symbol.type);
-//   return type == NativeType::Bool;
-// }
-//
-// bool is_string(const SymbolType &symbol) {
-//   if (!std::holds_alternative<NativeType>(*symbol.type))
-//     return false;
-//   NativeType type = std::get<NativeType>(*symbol.type);
-//   return type == NativeType::String;
-// }
-//
-// bool is(const SymbolType &symbol, const NativeType type) {
-//   if (!is_native(*symbol.type))
-//     return false;
-//   NativeType symbol_type = std::get<NativeType>(*symbol.type);
-//   return symbol_type == type;
-// }
-//
-// bool is(const SymbolType &symbol, const SymbolArrayType type) {
-//   if (!is_array(*symbol.type))
-//     return false;
-//   SymbolArrayType symbol_type = std::get<SymbolArrayType>(*symbol.type);
-//   return match(symbol_type.type, type.type) && symbol_type.size == type.size
-//   &&
-//          symbol_type.dimention == type.dimention;
-// }
-//
-// bool is(const SymbolType &symbol, const SymbolFunctionType type) {
-//   if (!is_function(*symbol.type))
-//     return false;
-//   SymbolFunctionType symbol_type =
-//   std::get<SymbolFunctionType>(*symbol.type); return
-//   symbol_type.match_args(type.args) &&
-//          match(symbol_type.return_type, type.return_type);
-// }
-//
-// bool match(const SymbolType &left, const SymbolType &right) {
-//   if (is_native(*left) && is_native(*right))
-//     return std::get<NativeType>(*left) == std::get<NativeType>(*right);
-//   if (is_function(*left) && is_function(*right))
-//     return is(*left, std::get<SymbolFunctionType>(*right));
-//   if (is_array(*left) && is_array(*right))
-//     return is(*left, std::get<SymbolArrayType>(*right));
-//   return false;
-// }
-//
-// bool match(const SymbolType &left, const SymbolType &right) {
-//   if (is_native(left) && is_native(right))
-//     return std::get<NativeType>(left) == std::get<NativeType>(right);
-//   if (is_function(left) && is_function(right))
-//     return is(left, std::get<SymbolFunctionType>(right));
-//   if (is_array(left) && is_array(right))
-//     return is(left, std::get<SymbolArrayType>(right));
-//   return false;
-// }
-//
 SymbolType do_unary(const Token &op, const SymbolType &rhs) {
   switch (op.type) {
   case TokenType::BitwiseNot:

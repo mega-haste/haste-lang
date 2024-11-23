@@ -5,6 +5,7 @@
 #include "Analysis/SymbolTable.hpp"
 #include "TypeNode.hpp"
 #include "tokens.hpp"
+#include <memory>
 
 namespace AST {
 
@@ -14,10 +15,18 @@ using Analysis::SymbolType;
 
 class ExpressionNode {
 public:
-  using TypeResult = SymbolType;
+  using TypeResult = std::shared_ptr<SymbolType>;
+  using UnrefTypeResult = SymbolType;
 
   Token start = Token();
   Token end = Token();
+
+  static inline TypeResult make_type_result(SymbolType type) {
+    return std::make_shared<SymbolType>(type);
+  }
+  static inline TypeResult make_type_result(SymbolType *type) {
+    return TypeResult(type);
+  }
 
   virtual std::string prettify(void) const = 0;
   virtual TypeResult get_type(Analysis::Context &ctx) const = 0;
