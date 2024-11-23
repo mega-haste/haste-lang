@@ -17,6 +17,7 @@ class Symbol;
 class Context;
 
 enum class NativeType : char {
+  Error = -2,
   Unknown = -1,
   Undefined,
   Auto,
@@ -57,6 +58,7 @@ public:
   bool is_number() const;
   bool is_bool() const;
   bool is_string() const;
+  bool has_error() const;
 
   bool is(const NativeType type) const;
   bool is(const SymbolArrayType type) const;

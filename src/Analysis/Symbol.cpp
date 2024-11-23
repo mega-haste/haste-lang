@@ -58,6 +58,12 @@ bool SymbolType::is_string() const {
   NativeType native_type = std::get<NativeType>(*type);
   return native_type == NativeType::String;
 }
+bool SymbolType::has_error() const {
+  if (!std::holds_alternative<NativeType>(*type))
+    return false;
+  NativeType native_type = std::get<NativeType>(*type);
+  return native_type == NativeType::Error;
+}
 
 bool SymbolType::is(const NativeType type) const {
   if (!is_native())
@@ -172,6 +178,8 @@ SymbolType do_unary(const Token &op, const SymbolType &rhs) {
 
 SymbolType do_binary(const SymbolType &lhs, const Token &op,
                      const SymbolType &rhs) {
+  if (lhs.has_error() or rhs.has_error())
+    return NativeType::Error;
   switch (op.type) {
   case TokenType::Plus:
   case TokenType::Minus:
@@ -231,6 +239,8 @@ std::string prettify(const SymbolType &type) {
       return "string";
     case NativeType::Char:
       return "char";
+    case NativeType::Error:
+      return "error";
     }
   }
   return "BAD";

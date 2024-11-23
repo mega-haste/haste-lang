@@ -160,7 +160,7 @@ IdentifierExpression::get_type(Analysis::Context &ctx) const {
     symbol->uses++;
     return symbol->type;
   }
-  return ExpressionNode::TypeResult();
+  return ExpressionNode::make_type_result(NativeType::Error);
 }
 void IdentifierExpression::analyse(Analysis::Context &ctx) const {
   if (ctx.is_defined(value)) {
@@ -168,6 +168,7 @@ void IdentifierExpression::analyse(Analysis::Context &ctx) const {
     symbol->uses++;
     return;
   }
+  ctx.report_error(value, "Use before definition (before initialization)", "");
 }
 
 CallExpression::CallExpression(Expression &&callee, const Token &paren,
@@ -316,7 +317,7 @@ void AssignExpression::analyse(Analysis::Context &ctx) const {
   ExpressionNode::TypeResult lhs_type = lhs->get_type(ctx);
   ExpressionNode::TypeResult rhs_type = value->get_type(ctx);
 
-  if (!rhs_type->mut and lhs_type->assigned) {
+  if (not lhs_type->mut and lhs_type->assigned) {
     ctx.report_error(lhs->start, "Double assignment to a immutable variable.",
                      "Cannot assign twice to a immutable. Use `mut` in the "
                      "variable declaration.");

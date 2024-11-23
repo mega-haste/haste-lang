@@ -121,29 +121,30 @@ void LetDef::analyse(Analysis::Context &ctx) const {
   auto value_type = IF value.has_value() THEN value.value()->get_type(
       ctx) ELSE ExpressionNode::make_type_result(NativeType::Undefined);
 
-  if (expected_type.is_auto()) {
-    expected_type = *value_type;
+  if (!value_type->has_error()) {
+    if (expected_type.is_auto()) {
+      expected_type = *value_type;
 
-    if (expected_type.is_auto() or expected_type.is_undefined()) {
-      ctx.report_error(ident, "Unknown type",
-                       "You need either set a known-type value to the "
-                       "variable, or explicitly set the type of the variable.");
+      if (expected_type.is_auto() or expected_type.is_undefined()) {
+        ctx.report_error(
+            ident, "Unknown type",
+            "You need either set a known-type value to the "
+            "variable, or explicitly set the type of the variable.");
+        return;
+      }
+      if (value.has_value())
+        value.value()->analyse(ctx);
+      ctx.define(ident, std::move(expected_type), mut);
       return;
     }
-    if (value.has_value())
-      value.value()->analyse(ctx);
-    ctx.define(ident, std::move(expected_type), mut);
-    return;
-  }
 
-  if (value.has_value() and !expected_type.match(*value_type)) {
-    LOG(end.to_string() << "  " << start.to_string());
-    LOG(end.at << " - " << start.at << " = " << end.at - start.at);
-    ctx.report_error(start.line, start.column, start.at, end.at - start.at,
-                     "Unknown type",
-                     "Your variable types doesn't match the value type. Try "
-                     "implicit type inference or use `auto` instead.");
-    return;
+    if (value.has_value() and !expected_type.match(*value_type)) {
+      ctx.report_error(start.line, start.column, start.at, end.at - start.at,
+                       "Unknown type",
+                       "Your variable types doesn't match the value type. Try "
+                       "implicit type inference or use `auto` instead.");
+      return;
+    }
   }
 
   if (value.has_value()) {
@@ -166,10 +167,12 @@ std::string IfStatement::prettify(const int depth) const {
                                            : "NONE");
 }
 void IfStatement::analyse(Analysis::Context &ctx) const {
-  if (!condition->get_type(ctx)->is_bool()) {
-    std::cerr << "[" << "??" << ":" << "??" << "] "
-              << "Expected it to be a boolean.\n";
-    return;
+  condition->analyse(ctx);
+  auto condition_type = condition->get_type(ctx);
+  if (!condition_type->is_bool()) {
+    ctx.report_error(
+        condition->start, "Mismatch types",
+        std::format("Expected `bool` got `{}`.", condition_type->prettify()));
   }
   then->analyse(ctx);
   if (otherwise.has_value())

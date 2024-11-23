@@ -238,13 +238,13 @@ void Scanner::scan_numbers() {
 }
 
 void Scanner::scan_string() {
-  advance();
   while (peek() != '"') {
     advance();
   }
   advance();
 
-  std::string buffer = m_current_line.substr(m_start, m_current - m_start);
+  std::string buffer =
+      m_current_line.substr(m_start + 1, m_current - m_start - 2);
   add_token(TokenType::StringLit, buffer);
 }
 
