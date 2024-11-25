@@ -18,7 +18,7 @@ public:
   void print_table(void) const;
 
   void declare(const Token &ident);
-  void define(const Token &ident, Type::Handler &&type, bool mut = false);
+  void define(const Token &ident, Type::Handler type, bool mut = false);
 
   void scope_begin(void);
   void scope_end(void);

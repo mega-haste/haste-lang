@@ -1,5 +1,7 @@
 #include "AST/Statments.hpp"
 #include "AST/TypeNode.hpp"
+#include "Analysis/Types.hpp"
+#include "Reporter.hpp"
 #include "common.hpp"
 #include <cmath>
 #include <format>
@@ -16,15 +18,46 @@ std::string LetDef::prettify(const int depth) const {
       value.has_value() ? value.value()->prettify() : "undefined");
 }
 void LetDef::analyse(Analysis::Context &ctx) const {
-  UNUSED(ctx);
-  UNIMPLEMENTED("LetDef::analyse")
-  // ctx.declare(ident);
-  //
-  // auto expected_type = IF type.has_value() THEN type.value()->get_type()
-  //                          ELSE Analysis::NativeType::Auto;
-  // auto value_type = IF value.has_value() THEN value.value()->get_type(
-  //     ctx) ELSE ExpressionNode::make_type_result(NativeType::Undefined);
-  //
+  ctx.declare(ident);
+  Type::Handler variable_type =
+      IF type.has_value() THEN type.value()->get_type() ELSE
+      Analysis::AutoType::make();
+  Type::Handler value_type = IF value.has_value() THEN value.value()->get_type(
+      ctx) ELSE Analysis::AutoType::make();
+
+  if (Analysis::TypeError *err =
+          dynamic_cast<Analysis::TypeError *>(variable_type.get())) {
+    ctx.report_error(type.value()->start, "Type Error", err->msg);
+    return;
+  }
+  if (Analysis::TypeError *err =
+          dynamic_cast<Analysis::TypeError *>(value_type.get())) {
+    ctx.report_error(value.value()->start, "Type Error", err->msg);
+    return;
+  }
+
+  if (Analysis::AutoType *_ =
+          dynamic_cast<Analysis::AutoType *>(value_type.get())) {
+    *variable_type = *value_type;
+  } else {
+    if (not variable_type->is_compatible_with(value_type)) {
+      ctx.report_error(value.value()->start, "Mismatch Type",
+                       std::format("`{}` does not match `{}`.",
+                                   value_type->stringfy(),
+                                   variable_type->stringfy()));
+      return;
+    }
+  }
+
+  variable_type->adjust_with(value_type);
+
+  if (value.has_value()) {
+    value.value()->analyse(ctx);
+    variable_type->is_assigned = true;
+  } else {
+    variable_type->is_assigned = false;
+  }
+  ctx.define(ident, variable_type, mut);
   // if (!value_type->has_error()) {
   //   if (expected_type.is_auto()) {
   //     expected_type = *value_type;
@@ -61,5 +94,7 @@ void LetDef::analyse(Analysis::Context &ctx) const {
   // }
   // ctx.define(ident, std::move(expected_type), mut);
 }
+
+Analysis::Type::Handler LetDef::define(Analysis::Context &ctx) const {}
 
 } // namespace AST

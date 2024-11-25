@@ -38,11 +38,11 @@ bool Context::has_error(void) const { return error_count > 0; }
 bool Context::has_warning(void) const { return warnings_count > 0; }
 
 void Context::declare(const Token &name) { symbol_table.declare(name); }
-void Context::define(const Token &name, Type::Handler &&type, bool mut) {
-  symbol_table.define(name, std::move(type), mut);
+void Context::define(const Token &name, Type::Handler type, bool mut) {
+  symbol_table.define(name, type, mut);
 }
-void Context::define(const Token &name, Type::Handler &&type) {
-  symbol_table.define(name, std::move(type));
+void Context::define(const Token &name, Type::Handler type) {
+  symbol_table.define(name, type);
 }
 
 Symbol *Context::local_first_look_up(const Token &key) {

@@ -11,6 +11,7 @@ enum class ReporterType {
   Warning,
   Error,
   SemanticError,
+  TypeError,
   Info,
 };
 

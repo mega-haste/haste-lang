@@ -1,6 +1,5 @@
 #include "AST/Expressions.hpp"
-#include "Analysis/Symbol.hpp"
-#include "common.hpp"
+#include "Analysis/Types.hpp"
 #include <format>
 #include <string>
 
@@ -23,13 +22,12 @@ std::string ArrayExpression::prettify(void) const {
 
 ExpressionNode::TypeResult
 ArrayExpression::get_type(Analysis::Context &ctx) const {
-  UNUSED(ctx);
-  UNIMPLEMENTED("ArrayExpression::get_type");
-  // int length = elements.size();
-  // auto elements_type = elements[0]->get_type(ctx);
-  //
-  // return ExpressionNode::make_type_result(SymbolType(
-  //     Analysis::SymbolArrayType(std::move(*elements_type), length, 1)));
+  int length = elements.size();
+  auto elements_type = elements[0]->get_type(ctx);
+
+  auto res = Analysis::ArrayType::make(elements_type);
+  res->length = length;
+  return res;
 }
 
 } // namespace AST

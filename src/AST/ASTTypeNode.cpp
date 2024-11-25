@@ -3,8 +3,11 @@
 #include "Analysis/Types.hpp"
 #include "common.hpp"
 #include "tokens.hpp"
+#include <cstdlib>
 #include <format>
+#include <iostream>
 #include <optional>
+#include <ostream>
 #include <string>
 
 namespace AST {
@@ -52,16 +55,23 @@ const std::string ArrayType::prettify() const {
                      size.has_value() ? size.value().value : "auto");
 }
 TypeNode::TypeResult ArrayType::get_type(void) const {
-  UNIMPLEMENTED("ArrayType::get_type");
-  // int array_size = -1;
-  // if (size.has_value()) {
-  //   const Token &size_token = size.value();
-  //   if (size_token == TokenType::IntLit) {
-  //     array_size = std::stoi(size_token.value);
-  //   }
-  // }
-  // return TypeNode::TypeResult(
-  //     Analysis::SymbolArrayType(type->get_type(), array_size, dimention));
+  Analysis::ArrayType::Handler res =
+      Analysis::ArrayType::make(type->get_type());
+  if (size.has_value()) {
+    const Token &l = size.value();
+    switch (l.type) {
+    case TokenType::IntLit:
+      res->length = std::stoul(l.value);
+      break;
+    case TokenType::Auto:
+      res->length = 0;
+      break;
+    default:
+      std::cerr << "You overcooked" << std::endl;
+      std::exit(453);
+    }
+  }
+  return std::move(res);
 }
 
 const std::string UndefinedType::prettify() const {

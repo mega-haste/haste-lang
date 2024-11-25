@@ -1,7 +1,6 @@
 #include "Reporter.hpp"
 #include "AST/Statments.hpp"
 #include <cstddef>
-#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <ios>
@@ -34,6 +33,7 @@ void Reporter::report(const ReporterType report_type, const std::string &title,
     std::cout << termcolor::yellow << termcolor::bold
               << report_type_as_string(report_type);
     break;
+  case ReporterType::TypeError:
   case ReporterType::SemanticError:
   case ReporterType::Error:
     std::cout << termcolor::red << termcolor::bold
@@ -84,6 +84,8 @@ std::string Reporter::report_type_as_string(const ReporterType &type) const {
     return "Semantic Error";
   case ReporterType::Info:
     return "Info";
+  case ReporterType::TypeError:
+    return "Type Error";
   }
   return "Unknown";
 }

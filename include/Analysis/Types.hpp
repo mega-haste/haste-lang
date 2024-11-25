@@ -1,8 +1,10 @@
 #ifndef __TYPES_HPP
 #define __TYPES_HPP
 
+#include "common.hpp"
 #include "tokens.hpp"
 #include <cstddef>
+#include <cstdint>
 #include <linux/limits.h>
 #include <memory>
 #include <string>
@@ -21,9 +23,13 @@ struct Type {
   virtual std::string prettify(void) const noexcept { return stringfy(); }
   virtual std::string stringfy(void) const noexcept = 0;
   virtual std::size_t get_size(void) const noexcept = 0;
+  virtual void adjust_with(const Type::Handler other) noexcept {
+    UNUSED(other);
+  }
+  virtual bool is_compatible_with(const Type::Handler other) const noexcept;
+  std::string get_prefixes(void) const;
 
   static Handler make(Handler &&type);
-  static bool is_compatible();
 
   bool is_reference() const noexcept;
   bool is_mutable() const noexcept;
@@ -48,6 +54,8 @@ struct AutoType : public Type {
   static Handler make();
   std::string stringfy(void) const noexcept override;
   std::size_t get_size(void) const noexcept override;
+  // void adjust_with(const Type::Handler other) noexcept override;
+  bool is_compatible_with(const Type::Handler other) const noexcept override;
 };
 
 struct NativeType : public Type {
@@ -79,6 +87,7 @@ struct NativeType : public Type {
 
   std::string stringfy(void) const noexcept override;
   std::size_t get_size(void) const noexcept override;
+  bool is_compatible_with(const Type::Handler other) const noexcept override;
 };
 
 struct CallableType : public Type {
@@ -87,6 +96,7 @@ struct CallableType : public Type {
     Token name;
     Type::Handler type;
     bool has_default = false;
+    bool is_mut = false;
 
     Arg(Token name, Type::Handler type, bool has_default);
   };
@@ -102,6 +112,7 @@ struct CallableType : public Type {
 
   std::string stringfy(void) const noexcept override;
   std::size_t get_size(void) const noexcept override;
+  bool is_compatible_with(const Type::Handler other) const noexcept override;
 };
 
 struct InterfaceType : public Type {
@@ -139,6 +150,37 @@ struct StructType : public Type {
   void implement(Token name, InterfaceType::Handler interface);
 };
 
+struct EnumType : public Type {
+  using Handler = std::shared_ptr<EnumType>;
+  using Member = std::uint64_t;
+  // struct Member {
+  //   Token name;
+  //   int value = 0;
+  //
+  //   Member(Token name, int value = 0);
+  // };
+
+  Token name;
+  Type::Handler member_type = NativeType::make(NativeType::Kind::Int);
+  std::unordered_map<Token, Member> members;
+  Member last_value = 0;
+
+  static Handler make(Token name);
+  static Handler make(Token name, Type::Handler member_type);
+
+  EnumType(Token name);
+  EnumType(Token name, Type::Handler member_type);
+
+  std::string prettify(void) const noexcept override;
+  std::string stringfy(void) const noexcept override;
+  std::size_t get_size(void) const noexcept override;
+
+  void add_member(Token name);
+  void add_member(Token name, int value);
+
+  bool has_member(Token name) const noexcept;
+};
+
 struct ArrayType : public Type {
   using Handler = std::shared_ptr<ArrayType>;
   Type::Handler element_type = NativeType::make(NativeType::Kind::Undefined);
@@ -152,6 +194,12 @@ struct ArrayType : public Type {
 
   std::string stringfy(void) const noexcept override;
   std::size_t get_size(void) const noexcept override;
+  bool is_compatible_with(const Type::Handler other) const noexcept override;
+  void adjust_with(const Type::Handler other) noexcept override {
+    if (ArrayType *o = dynamic_cast<ArrayType *>(other.get())) {
+      length = o->length;
+    }
+  }
 };
 
 } // namespace Analysis

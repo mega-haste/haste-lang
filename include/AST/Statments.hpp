@@ -67,6 +67,8 @@ public:
                        TypeNode::Handler &&return_type, Statement &&body);
   std::string prettify(const int depth = 0) const override;
   void analyse(Analysis::Context &ctx) const override;
+
+  Analysis::CallableType::Handler define(Analysis::Context &ctx) const;
 };
 
 class LetDef : public StatementNode {
@@ -80,6 +82,7 @@ public:
                   std::optional<TypeNode::Handler> &&type, bool mut);
   std::string prettify(const int depth = 0) const override;
   void analyse(Analysis::Context &ctx) const override;
+  Analysis::Type::Handler define(Analysis::Context &ctx) const;
 };
 
 class IfStatement : public StatementNode {

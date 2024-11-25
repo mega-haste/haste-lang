@@ -38,7 +38,7 @@ void SymbolTable::declare(const Token &ident) {
       Symbol(NativeType::make(NativeType::Kind::Undefined), false, false);
 }
 
-void SymbolTable::define(const Token &ident, Type::Handler &&type, bool mut) {
+void SymbolTable::define(const Token &ident, Type::Handler type, bool mut) {
   Scope &current_scope = get_current_scope();
   if (!current_scope.contains(ident))
     throw std::logic_error(std::format("Expected `{}` to be declared in the "
