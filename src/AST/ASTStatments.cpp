@@ -1,7 +1,8 @@
 #include "AST/Expressions.hpp"
 #include "AST/Statments.hpp"
+#include "AST/TypeNode.hpp"
 #include "Analysis/Context.hpp"
-#include "Analysis/Symbol.hpp"
+#include "Analysis/Types.hpp"
 #include "common.hpp"
 #include "tokens.hpp"
 #include <cmath>
@@ -25,7 +26,7 @@ std::string repeat_char(char c, int times) {
   return s;
 }
 
-void StatementNode::analyse(Analysis::Context &ctx) const { UNUSED(ctx); };
+void StatementNode::analyse(Context &ctx) const { UNUSED(ctx); };
 
 std::string NoneStmt::prettify(const int depth) const {
   UNUSED(depth);
@@ -63,7 +64,7 @@ void ExpressionStatement::analyse(Analysis::Context &ctx) const {
 
 FunctionDef::FunctionDef(const Token &identifier,
                          std::vector<TypedIdentifier> arguments,
-                         Type &&return_type, Statement &&body)
+                         TypeNode::Handler &&return_type, Statement &&body)
     : identifier(identifier), arguments(std::move(arguments)),
       return_type(std::move(return_type)), body(std::move(body)) {}
 std::string FunctionDef::prettify(const int depth) const {
@@ -80,80 +81,34 @@ std::string FunctionDef::prettify(const int depth) const {
                      body->prettify(depth + 4));
 }
 void FunctionDef::analyse(Analysis::Context &ctx) const {
-  ctx.declare(identifier);
-  Analysis::SymbolFunctionType type =
-      Analysis::SymbolFunctionType(return_type->get_type());
-  for (auto &argument : arguments) {
-    type.args.push_back(Analysis::SymbolFunctionType::Arg(
-        argument.identifier, argument.type->get_type()));
-  }
-  ctx.define(identifier, SymbolType(type), false);
-
-  ctx.scope_begin();
-
-  type.define_args(ctx);
-
-  ctx.current_func = Context::FuncType::Function;
-  ctx.function_stack.push_back(identifier.value);
-
-  body->analyse(ctx);
-
-  ctx.current_func = Context::FuncType::None;
-  ctx.function_stack.pop_back();
-
-  ctx.scope_end();
-}
-
-LetDef::LetDef(const Token &ident, std::optional<Expression> &&value,
-               std::optional<Type> &&type, bool mut)
-    : ident(ident), value(std::move(value)), type(std::move(type)), mut(mut) {}
-std::string LetDef::prettify(const int depth) const {
-  return std::format(
-      "{}(let_dec name:{} mut:{} type:{} value:{})", repeat_char(' ', depth),
-      ident.value, mut, type.has_value() ? type.value()->prettify() : "unset",
-      value.has_value() ? value.value()->prettify() : "undefined");
-}
-void LetDef::analyse(Analysis::Context &ctx) const {
-  ctx.declare(ident);
-
-  auto expected_type = IF type.has_value() THEN type.value()->get_type()
-                           ELSE Analysis::NativeType::Auto;
-  auto value_type = IF value.has_value() THEN value.value()->get_type(
-      ctx) ELSE ExpressionNode::make_type_result(NativeType::Undefined);
-
-  if (!value_type->has_error()) {
-    if (expected_type.is_auto()) {
-      expected_type = *value_type;
-
-      if (expected_type.is_auto() or expected_type.is_undefined()) {
-        ctx.report_error(
-            ident, "Unknown type",
-            "You need either set a known-type value to the "
-            "variable, or explicitly set the type of the variable.");
-        return;
-      }
-      if (value.has_value())
-        value.value()->analyse(ctx);
-      ctx.define(ident, std::move(expected_type), mut);
-      return;
-    }
-
-    if (value.has_value() and !expected_type.match(*value_type)) {
-      ctx.report_error(start.line, start.column, start.at, end.at - start.at,
-                       "Unknown type",
-                       "Your variable types doesn't match the value type. Try "
-                       "implicit type inference or use `auto` instead.");
-      return;
-    }
-  }
-
-  if (value.has_value()) {
-    value.value()->analyse(ctx);
-    expected_type.assigned = true;
-  } else {
-    expected_type.assigned = false;
-  }
-  ctx.define(ident, std::move(expected_type), mut);
+  UNUSED(ctx);
+  UNIMPLEMENTED("FunctionDef::analyse");
+  // ctx.declare(identifier);
+  // Analysis::CallableType::Handler type =
+  //     Analysis::CallableType::make(return_type->get_type());
+  // for (auto &argument : arguments) {
+  //   type->arguments.push_back(Analysis::CallableType::Arg(
+  //       argument.identifier, argument.type->get_type()));
+  // }
+  // ctx.define(
+  //   identifier,
+  //   Type::make(type),
+  //   false
+  // );
+  //
+  // ctx.scope_begin();
+  //
+  // type.define_args(ctx);
+  //
+  // ctx.current_func = Context::FuncType::Function;
+  // ctx.function_stack.push_back(identifier.value);
+  //
+  // body->analyse(ctx);
+  //
+  // ctx.current_func = Context::FuncType::None;
+  // ctx.function_stack.pop_back();
+  //
+  // ctx.scope_end();
 }
 
 IfStatement::IfStatement(Expression &&condition, Statement &&then,
@@ -167,16 +122,19 @@ std::string IfStatement::prettify(const int depth) const {
                                            : "NONE");
 }
 void IfStatement::analyse(Analysis::Context &ctx) const {
-  condition->analyse(ctx);
-  auto condition_type = condition->get_type(ctx);
-  if (!condition_type->is_bool()) {
-    ctx.report_error(
-        condition->start, "Mismatch types",
-        std::format("Expected `bool` got `{}`.", condition_type->prettify()));
-  }
-  then->analyse(ctx);
-  if (otherwise.has_value())
-    otherwise.value()->analyse(ctx);
+  UNUSED(ctx);
+  UNIMPLEMENTED("IfStatement::analyse");
+  // condition->analyse(ctx);
+  // auto condition_type = condition->get_type(ctx);
+  // if (!condition_type->is_bool()) {
+  //   ctx.report_error(
+  //       condition->start, "Mismatch types",
+  //       std::format("Expected `bool` got `{}`.",
+  //       condition_type->prettify()));
+  // }
+  // then->analyse(ctx);
+  // if (otherwise.has_value())
+  //   otherwise.value()->analyse(ctx);
 }
 
 ReturnStatement::ReturnStatement(std::optional<Expression> &&expr)

@@ -1,5 +1,6 @@
 #include "Analysis/SymbolTable.hpp"
 #include "Analysis/Symbol.hpp"
+#include "Analysis/Types.hpp"
 #include "common.hpp"
 #include "tokens.hpp"
 #include <cstddef>
@@ -22,8 +23,8 @@ void SymbolTable::print_table(void) const {
       std::cout << symbol.first.value << ": "
                 << (IF symbol.second.is_mutable() THEN "mut" ELSE "immut")
                 << " "
-                << (IF symbol.second.type->assigned THEN "assigned" ELSE
-                                                         "not_assigned")
+                << (IF symbol.second.type->is_assigned THEN "assigned" ELSE
+                                                            "not_assigned")
                 << " " << symbol.second.prettify() << " - ";
     }
     i++;
@@ -33,10 +34,11 @@ void SymbolTable::print_table(void) const {
 }
 
 void SymbolTable::declare(const Token &ident) {
-  scopes.back()[ident] = Symbol(NativeType::Unknown, false, false);
+  scopes.back()[ident] =
+      Symbol(NativeType::make(NativeType::Kind::Undefined), false, false);
 }
 
-void SymbolTable::define(const Token &ident, SymbolType &&type, bool mut) {
+void SymbolTable::define(const Token &ident, Type::Handler &&type, bool mut) {
   Scope &current_scope = get_current_scope();
   if (!current_scope.contains(ident))
     throw std::logic_error(std::format("Expected `{}` to be declared in the "
@@ -44,9 +46,9 @@ void SymbolTable::define(const Token &ident, SymbolType &&type, bool mut) {
                                        ident.value, ident.value));
 
   Symbol &the_symbol = current_scope[ident];
-  *the_symbol.type = std::move(type);
+  the_symbol.type = std::move(type);
   the_symbol.defined = true;
-  the_symbol.type->mut = mut;
+  the_symbol.type->is_mut = mut;
 }
 
 void SymbolTable::scope_begin(void) { scopes.push_back(Scope()); }

@@ -13,6 +13,7 @@ void Compiler::compile(std::filesystem::path path) {
 
   Parser parser(tokens);
   parser.parse(tu->program);
+  tu->program.pretty_print();
 }
 
 void Compiler::analyse_all() {

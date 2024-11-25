@@ -1,8 +1,9 @@
 #pragma once
 
+#include "AST/TypeNode.hpp"
 #include "Analysis/Context.hpp"
-#include "Analysis/Symbol.hpp"
 #include "Analysis/SymbolTable.hpp"
+#include "Analysis/Types.hpp"
 #include "Expressions.hpp"
 #include "tokens.hpp"
 #include <cmath>
@@ -19,7 +20,7 @@ class StatementNode;
 using Statement = std::unique_ptr<StatementNode>;
 using Analysis::NativeType;
 using Analysis::SymbolTable;
-using Analysis::SymbolType;
+using Analysis::Type;
 
 class StatementNode {
 public:
@@ -58,12 +59,12 @@ class FunctionDef : public StatementNode {
 public:
   const Token &identifier;
   std::vector<TypedIdentifier> arguments;
-  Type return_type;
+  TypeNode::Handler return_type;
   Statement body;
 
   explicit FunctionDef(const Token &identifier,
                        std::vector<TypedIdentifier> arguments,
-                       Type &&return_type, Statement &&body);
+                       TypeNode::Handler &&return_type, Statement &&body);
   std::string prettify(const int depth = 0) const override;
   void analyse(Analysis::Context &ctx) const override;
 };
@@ -72,11 +73,11 @@ class LetDef : public StatementNode {
 public:
   const Token &ident;
   std::optional<Expression> value;
-  std::optional<Type> type;
+  std::optional<TypeNode::Handler> type;
   bool mut;
 
   explicit LetDef(const Token &ident, std::optional<Expression> &&value,
-                  std::optional<Type> &&type, bool mut);
+                  std::optional<TypeNode::Handler> &&type, bool mut);
   std::string prettify(const int depth = 0) const override;
   void analyse(Analysis::Context &ctx) const override;
 };

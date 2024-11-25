@@ -1,5 +1,6 @@
 
 #include "AST/Statments.hpp"
+#include "AST/TypeNode.hpp"
 #include "Parser.hpp"
 #include "tokens.hpp"
 
@@ -11,7 +12,7 @@ Statement Parser::let(void) {
   bool mut = match({TokenType::Mut});
   const Token &name =
       consume_identifier("Expected identifier of let statement.");
-  std::optional<Type> type =
+  std::optional<TypeNode::Handler> type =
       match({TokenType::Colon}) ? std::optional{parse_type()} : std::nullopt;
   std::optional<Expression> value =
       match({TokenType::Eq}) ? std::optional{expression()} : std::nullopt;

@@ -3,6 +3,7 @@
 
 #include "AST/Expressions.hpp"
 #include "AST/Statments.hpp"
+#include "AST/TypeNode.hpp"
 #include "Program.hpp"
 #include "tokens.hpp"
 #include <cstddef>
@@ -47,7 +48,7 @@ private:
   Statement $return(void);
 
   TypedIdentifier parse_typed_ident(void);
-  Type parse_type(void);
+  TypeNode::Handler parse_type(void);
 
   Statement expression_statement(void);
 
@@ -73,6 +74,7 @@ private:
   Expression primary(void);
 
   Expression parse_tuple(std::vector<Expression> &&exprs);
+  Expression parse_array();
 
   bool match(std::initializer_list<TokenType> types);
   bool check(TokenType type) const;

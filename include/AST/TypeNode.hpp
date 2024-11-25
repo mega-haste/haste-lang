@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Analysis/Symbol.hpp"
+#include "Analysis/Types.hpp"
 #include "tokens.hpp"
 #include <common.hpp>
 #include <memory>
@@ -12,12 +12,12 @@ namespace AST {
 class TypeNode;
 
 using Analysis::NativeType;
-using Analysis::SymbolType;
-using Type = std::unique_ptr<TypeNode>;
+using Analysis::Type;
 
 class TypeNode {
 public:
-  using TypeResult = Analysis::SymbolType;
+  using TypeResult = Analysis::Type::Handler;
+  using Handler = std::shared_ptr<TypeNode>;
 
   Token start;
   Token end;
@@ -39,12 +39,13 @@ public:
 
 class ArrayType : public TypeNode {
 public:
-  Type type;
+  TypeNode::Handler type;
   std::optional<Token> size;
   int dimention = 1;
 
-  explicit ArrayType(Type &&type, std::optional<Token> size);
-  explicit ArrayType(Type &&type, std::optional<Token> size, int dimention);
+  explicit ArrayType(TypeNode::Handler &&type, std::optional<Token> size);
+  explicit ArrayType(TypeNode::Handler &&type, std::optional<Token> size,
+                     int dimention);
   const std::string prettify() const override;
   TypeResult get_type(void) const override;
 };
@@ -61,9 +62,9 @@ public:
   Token end;
 
   const Token &identifier;
-  Type type;
+  TypeNode::Handler type;
 
-  TypedIdentifier(const Token &identifier, Type &&type);
+  TypedIdentifier(const Token &identifier, TypeNode::Handler &&type);
   const std::string prettify() const;
 };
 

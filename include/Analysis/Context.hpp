@@ -37,8 +37,8 @@ public:
   bool has_warning(void) const;
 
   void declare(const Token &ident);
-  void define(const Token &ident, SymbolType &&type);
-  void define(const Token &ident, SymbolType &&type, bool mut = false);
+  void define(const Token &ident, Type::Handler &&type);
+  void define(const Token &ident, Type::Handler &&type, bool mut = false);
   Symbol *local_first_look_up(const Token &key);
   void scope_begin(void);
   void scope_end(void);

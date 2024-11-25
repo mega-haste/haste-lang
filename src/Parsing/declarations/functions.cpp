@@ -1,3 +1,4 @@
+#include "AST/TypeNode.hpp"
 #include "Parser.hpp"
 
 std::unique_ptr<FunctionDef> Parser::function(void) {
@@ -16,7 +17,7 @@ std::unique_ptr<FunctionDef> Parser::function(void) {
   }
   consume(TokenType::CloseParen, "Expected ')' after parameters.");
 
-  Type return_type = std::make_unique<TypeLiteral>(f);
+  TypeNode::Handler return_type = std::make_unique<TypeLiteral>(f);
   if (match({TokenType::Colon})) {
     return_type = parse_type();
   }

@@ -9,7 +9,7 @@ TypedIdentifier Parser::parse_typed_ident(void) {
   const Token &ident = previous(); // This is same as the starting token
 
   consume(TokenType::Colon, "Expected ':' after the identifier.");
-  Type type = parse_type();
+  TypeNode::Handler type = parse_type();
 
   auto res = TypedIdentifier(ident, std::move(type));
   res.start = ident;
@@ -18,14 +18,15 @@ TypedIdentifier Parser::parse_typed_ident(void) {
   return res;
 }
 
-Type Parser::parse_type(void) {
+TypeNode::Handler Parser::parse_type(void) {
   if (match({TokenType::Int, TokenType::UInt, TokenType::Float,
              TokenType::String, TokenType::Void, TokenType::Bool,
              TokenType::Auto, TokenType::Char})) {
     const Token &token = previous(); // Again, this is the starting token
     if (match({TokenType::OpenSquareBracket})) {
-      std::optional<Token> size =
-          match({TokenType::IntLit}) ? std::optional(previous()) : std::nullopt;
+      std::optional<Token> size = match({TokenType::IntLit, TokenType::Auto})
+                                      ? std::optional(previous())
+                                      : std::nullopt;
       auto res = std::make_unique<ArrayType>(
           std::make_unique<TypeLiteral>(token), size);
       res->start = token;

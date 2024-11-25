@@ -1,6 +1,7 @@
 #include "AST/Expressions.hpp"
 #include "Parser.hpp"
 #include "tokens.hpp"
+#include <memory>
 
 Expression Parser::expression(void) {
   const Token &starting_token = peek();
@@ -349,6 +350,10 @@ Expression Parser::primary(void) {
     return res;
   }
 
+  if (match({TokenType::OpenSquareBracket})) {
+    return parse_array();
+  }
+
   if (match({TokenType::If})) {
     m_current--;
     return inline_if();
@@ -366,10 +371,22 @@ Expression Parser::parse_tuple(std::vector<Expression> &&exprs) {
     exprs.push_back(expression());
   } while (match({TokenType::Comma}));
 
-  const Token &closing_parentheses =
+  const Token &ending_token =
       consume(TokenType::CloseParen, "Expected ')' after expression.");
-  auto res =
-      std::make_unique<TupleExpression>(std::move(exprs), closing_parentheses);
-  res->end = closing_parentheses;
+  auto res = std::make_unique<TupleExpression>(std::move(exprs));
+  res->end = ending_token;
+  return res;
+}
+
+Expression Parser::parse_array() {
+  std::vector<Expression> exprs;
+  do {
+    exprs.push_back(expression());
+  } while (match({TokenType::Comma}));
+
+  const Token &ending_token =
+      consume(TokenType::CloseSquareBracket, "Expected ']' after expression.");
+  auto res = std::make_unique<ArrayExpression>(std::move(exprs));
+  res->end = ending_token;
   return res;
 }

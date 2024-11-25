@@ -1,9 +1,10 @@
 #include "AST/Expressions.hpp"
+#include "AST/TypeNode.hpp"
 #include "Analysis/Symbol.hpp"
+#include "Analysis/Types.hpp"
 #include "common.hpp"
 #include "tokens.hpp"
 #include <cmath>
-#include <cstddef>
 #include <cstdlib>
 #include <format>
 #include <memory>
@@ -41,15 +42,15 @@ LiteralExpression::get_type(Analysis::Context &ctx) const {
   UNUSED(ctx);
   switch (value.type) {
   case TokenType::CharLit:
-    return ExpressionNode::make_type_result(NativeType::Char);
+    return NativeType::make(NativeType::Kind::Char);
   case TokenType::StringLit:
-    return ExpressionNode::make_type_result(NativeType::String);
+    return NativeType::make(NativeType::Kind::String);
   case TokenType::IntLit:
-    return ExpressionNode::make_type_result(NativeType::Int);
+    return NativeType::make(NativeType::Kind::Int);
   case TokenType::FloatLit:
-    return ExpressionNode::make_type_result(NativeType::Float);
+    return NativeType::make(NativeType::Kind::Float);
   default:
-    return ExpressionNode::make_type_result(NativeType::Unknown);
+    return NativeType::make(NativeType::Kind::Unknown);
   }
 }
 
@@ -60,7 +61,7 @@ std::string BooleanExpression::prettify(void) const {
 ExpressionNode::TypeResult
 BooleanExpression::get_type(Analysis::Context &ctx) const {
   UNUSED(ctx);
-  return ExpressionNode::make_type_result(NativeType::Bool);
+  return NativeType::make(NativeType::Kind::Bool);
 }
 
 UnaryExpression::UnaryExpression(const Token &op, Expression &&rhs)
@@ -70,8 +71,8 @@ std::string UnaryExpression::prettify(void) const {
 }
 ExpressionNode::TypeResult
 UnaryExpression::get_type(Analysis::Context &ctx) const {
-  return ExpressionNode::make_type_result(
-      Analysis::do_unary(op, *rhs->get_type(ctx)->type));
+  UNUSED(ctx);
+  UNIMPLEMENTED("UnaryExpression::get_type");
 }
 void UnaryExpression::analyse(Analysis::Context &ctx) const {
   // TODO: Implement Analyse for Unaries
@@ -87,8 +88,8 @@ std::string BinaryExpression::prettify(void) const {
 }
 ExpressionNode::TypeResult
 BinaryExpression::get_type(Analysis::Context &ctx) const {
-  return ExpressionNode::make_type_result(Analysis::do_binary(
-      *lhs->get_type(ctx)->type, op, *rhs->get_type(ctx)->type));
+  UNUSED(ctx);
+  UNIMPLEMENTED("BinaryExpression::get_type");
 }
 void BinaryExpression::analyse(Analysis::Context &ctx) const {
   // TODO: Analyse binary expressions
@@ -123,14 +124,16 @@ ExpressionNode::TypeResult InlineIf::get_type(Analysis::Context &ctx) const {
 }
 void InlineIf::analyse(Analysis::Context &ctx) const {
   ExpressionNode::TypeResult condition_type = condition->get_type(ctx);
-  if (!condition_type->is_bool()) {
+  if (auto cond_t =
+          dynamic_cast<Analysis::NativeType *>(condition_type.get())) {
+    UNUSED(cond_t);
     UNIMPLEMENTED("InlineIf analysis (condition checking)");
   }
   consequent->analyse(ctx);
   alternate->analyse(ctx);
 }
 
-AsExpression::AsExpression(Expression &&expr, Type &&type)
+AsExpression::AsExpression(Expression &&expr, TypeNode::Handler &&type)
     : expr(std::move(expr)), type(std::move(type)) {}
 std::string AsExpression::prettify(void) const {
   return std::format("(as {} {})", expr->prettify(), type->prettify());
@@ -138,7 +141,7 @@ std::string AsExpression::prettify(void) const {
 ExpressionNode::TypeResult
 AsExpression::get_type(Analysis::Context &ctx) const {
   UNUSED(ctx);
-  return ExpressionNode::make_type_result(type->get_type());
+  return Type::make(type->get_type());
 }
 void AsExpression::analyse(Analysis::Context &ctx) const { expr->analyse(ctx); }
 
@@ -160,7 +163,8 @@ IdentifierExpression::get_type(Analysis::Context &ctx) const {
     symbol->uses++;
     return symbol->type;
   }
-  return ExpressionNode::make_type_result(NativeType::Error);
+  return Analysis::TypeError::make(
+      std::format("The symbol '{}' aren't defined.", value.value));
 }
 void IdentifierExpression::analyse(Analysis::Context &ctx) const {
   if (ctx.is_defined(value)) {
@@ -191,46 +195,44 @@ std::string CallExpression::prettify(void) const {
 
 ExpressionNode::TypeResult
 CallExpression::get_type(Analysis::Context &ctx) const {
-  ExpressionNode::TypeResult callee_symbol = callee->get_type(ctx);
-  if (callee_symbol->is_function()) {
-    Analysis::SymbolFunctionType &callee_as_func_type =
-        std::get<Analysis::SymbolFunctionType>(*callee_symbol->type);
-    return ExpressionNode::make_type_result(callee_as_func_type.return_type);
-  }
-  return ExpressionNode::make_type_result(NativeType::Unknown);
+  UNUSED(ctx);
+  UNIMPLEMENTED("CallExpression::get_type");
 }
 
 void CallExpression::analyse(Analysis::Context &ctx) const {
-  callee->analyse(ctx);
-  ExpressionNode::TypeResult callee_type = callee->get_type(ctx);
-  if (!callee_type->is_function()) {
-    ctx.report_error(paren, "Type Error", "Should be a function type.");
-    return;
-  }
-  Analysis::SymbolFunctionType &callee_func =
-      std::get<Analysis::SymbolFunctionType>(*callee_type->type);
-  if (arguments.size() != callee_func.args.size()) {
-    ctx.report_error(
-        paren, "Argument Error",
-        std::format("Expected {} arguments to be passed, only got {}.",
-                    callee_func.args.size(), arguments.size()));
-    return;
-  }
-  for (std::size_t i = 0; i < arguments.size(); i++) {
-    auto &argument = arguments[i];
-
-    argument->analyse(ctx);
-    ExpressionNode::TypeResult argument_type = argument->get_type(ctx);
-    auto &target_arg_type = callee_func.args[i];
-    if (!argument_type->match(target_arg_type.type)) {
-      ctx.report_error(argument->start, "Argument Error",
-                       std::format("the {} argument didn't match the expected "
-                                   "type `{}`, got `{}` instead.",
-                                   i + 1,
-                                   Analysis::prettify(target_arg_type.type),
-                                   Analysis::prettify(*argument_type)));
-    }
-  }
+  UNUSED(ctx);
+  UNIMPLEMENTED("CallExpression::analyse");
+  // callee->analyse(ctx);
+  // ExpressionNode::TypeResult callee_type = callee->get_type(ctx);
+  // if (!callee_type->is_function()) {
+  //   ctx.report_error(paren, "Type Error", "Should be a function type.");
+  //   return;
+  // }
+  // Analysis::SymbolFunctionType &callee_func =
+  //     std::get<Analysis::SymbolFunctionType>(*callee_type->type);
+  // if (arguments.size() != callee_func.args.size()) {
+  //   ctx.report_error(
+  //       paren, "Argument Error",
+  //       std::format("Expected {} arguments to be passed, only got {}.",
+  //                   callee_func.args.size(), arguments.size()));
+  //   return;
+  // }
+  // for (std::size_t i = 0; i < arguments.size(); i++) {
+  //   auto &argument = arguments[i];
+  //
+  //   argument->analyse(ctx);
+  //   ExpressionNode::TypeResult argument_type = argument->get_type(ctx);
+  //   auto &target_arg_type = callee_func.args[i];
+  //   if (!argument_type->match(target_arg_type.type)) {
+  //     ctx.report_error(argument->start, "Argument Error",
+  //                      std::format("the {} argument didn't match the expected
+  //                      "
+  //                                  "type `{}`, got `{}` instead.",
+  //                                  i + 1,
+  //                                  Analysis::prettify(target_arg_type.type),
+  //                                  Analysis::prettify(*argument_type)));
+  //   }
+  // }
 }
 
 MemberAccessExpression::MemberAccessExpression(Expression &&group,
@@ -242,6 +244,7 @@ std::string MemberAccessExpression::prettify(void) const {
 }
 ExpressionNode::TypeResult
 MemberAccessExpression::get_type(Analysis::Context &ctx) const {
+  // TODO: MemberAccessExpression
   UNUSED(ctx);
   UNIMPLEMENTED("MemberAccessExpression");
 }
@@ -261,9 +264,8 @@ SubscriptingExpression::get_type(Analysis::Context &ctx) const {
   UNIMPLEMENTED("SubscriptingExpression");
 }
 
-TupleExpression::TupleExpression(std::vector<Expression> &&elements,
-                                 const Token &closing_parentheses)
-    : elements(std::move(elements)), closing_parentheses(closing_parentheses) {}
+TupleExpression::TupleExpression(std::vector<Expression> &&elements)
+    : elements(std::move(elements)) {}
 std::string TupleExpression::prettify(void) const {
   std::string ele_str;
 
@@ -311,26 +313,29 @@ AssignExpression::get_type(Analysis::Context &ctx) const {
   return lhs->get_type(ctx);
 }
 void AssignExpression::analyse(Analysis::Context &ctx) const {
-  lhs->analyse(ctx);
-  value->analyse(ctx);
-
-  ExpressionNode::TypeResult lhs_type = lhs->get_type(ctx);
-  ExpressionNode::TypeResult rhs_type = value->get_type(ctx);
-
-  if (not lhs_type->mut and lhs_type->assigned) {
-    ctx.report_error(lhs->start, "Double assignment to a immutable variable.",
-                     "Cannot assign twice to a immutable. Use `mut` in the "
-                     "variable declaration.");
-  }
-
-  if (!lhs_type->match(*rhs_type)) {
-    ctx.report_error(value->start, "Mismatched types",
-                     std::format("Expected to be '{}' got '{}'.",
-                                 Analysis::prettify(*lhs_type),
-                                 Analysis::prettify(*rhs_type)));
-  }
-
-  lhs_type->assigned = true;
+  UNUSED(ctx);
+  UNIMPLEMENTED("AssignExpression::analyse")
+  // lhs->analyse(ctx);
+  // value->analyse(ctx);
+  //
+  // ExpressionNode::TypeResult lhs_type = lhs->get_type(ctx);
+  // ExpressionNode::TypeResult rhs_type = value->get_type(ctx);
+  //
+  // if (not lhs_type->mut and lhs_type->assigned) {
+  //   ctx.report_error(lhs->start, "Double assignment to a immutable
+  //   variable.",
+  //                    "Cannot assign twice to a immutable. Use `mut` in the "
+  //                    "variable declaration.");
+  // }
+  //
+  // if (!lhs_type->match(*rhs_type)) {
+  //   ctx.report_error(value->start, "Mismatched types",
+  //                    std::format("Expected to be '{}' got '{}'.",
+  //                                Analysis::prettify(*lhs_type),
+  //                                Analysis::prettify(*rhs_type)));
+  // }
+  //
+  // lhs_type->assigned = true;
 }
 
 } // namespace AST

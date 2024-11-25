@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Analysis/Context.hpp"
-#include "Analysis/Symbol.hpp"
 #include "Analysis/SymbolTable.hpp"
+#include "Analysis/Types.hpp"
 #include "TypeNode.hpp"
 #include "tokens.hpp"
 #include <memory>
@@ -11,22 +11,16 @@ namespace AST {
 
 using Analysis::NativeType;
 using Analysis::SymbolTable;
-using Analysis::SymbolType;
+using Analysis::Type;
 
 class ExpressionNode {
 public:
-  using TypeResult = std::shared_ptr<SymbolType>;
-  using UnrefTypeResult = SymbolType;
+  using Handler = std::shared_ptr<ExpressionNode>;
+  using TypeResult = Type::Handler;
+  using UnrefTypeResult = Type;
 
   Token start = Token();
   Token end = Token();
-
-  static inline TypeResult make_type_result(SymbolType type) {
-    return std::make_shared<SymbolType>(type);
-  }
-  static inline TypeResult make_type_result(SymbolType *type) {
-    return TypeResult(type);
-  }
 
   virtual std::string prettify(void) const = 0;
   virtual TypeResult get_type(Analysis::Context &ctx) const = 0;
@@ -111,9 +105,9 @@ public:
 class AsExpression : public ExpressionNode {
 public:
   Expression expr;
-  Type type;
+  TypeNode::Handler type;
 
-  explicit AsExpression(Expression &&expr, Type &&type);
+  explicit AsExpression(Expression &&expr, TypeNode::Handler &&type);
   std::string prettify(void) const override;
   TypeResult get_type(Analysis::Context &ctx) const override;
   void analyse(Analysis::Context &ctx) const override;
@@ -171,10 +165,17 @@ public:
 class TupleExpression : public ExpressionNode {
 public:
   std::vector<Expression> elements;
-  const Token &closing_parentheses;
 
-  explicit TupleExpression(std::vector<Expression> &&elements,
-                           const Token &closing_parentheses);
+  explicit TupleExpression(std::vector<Expression> &&elements);
+  std::string prettify(void) const override;
+  TypeResult get_type(Analysis::Context &ctx) const override;
+};
+
+class ArrayExpression : public ExpressionNode {
+public:
+  std::vector<Expression> elements;
+
+  explicit ArrayExpression(std::vector<Expression> &&elements);
   std::string prettify(void) const override;
   TypeResult get_type(Analysis::Context &ctx) const override;
 };
