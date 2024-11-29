@@ -33,6 +33,7 @@ struct Type {
 
   bool is_reference() const noexcept;
   bool is_mutable() const noexcept;
+  bool is_void() const noexcept;
 };
 
 struct TypeError : public Type {

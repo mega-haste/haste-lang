@@ -7,12 +7,16 @@
 #include "tokens.hpp"
 #include <filesystem>
 #include <fstream>
+#include <string>
+#include <string_view>
 
 class TranslationUnit {
   std::ifstream m_file;
+  std::string m_content;
   Reporter m_reporter;
   Scanner m_scanner;
   TokenList m_tokens;
+  std::vector<std::string_view> m_lines;
 
 public:
   Program program;

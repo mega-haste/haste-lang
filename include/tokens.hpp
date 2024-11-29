@@ -2,9 +2,9 @@
 
 #include <cstddef>
 #include <functional>
-#include <iterator>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 enum class TokenType {
@@ -107,7 +107,7 @@ enum class TokenType {
 
 struct Token {
   TokenType type = (TokenType)0;
-  std::string value;
+  std::string_view lexem;
   std::size_t line = 1;
   std::size_t column = 1;
   std::size_t at = 0;
@@ -115,24 +115,25 @@ struct Token {
 
   Token() = default;
   Token(TokenType type) : type(type) {}
-  Token(TokenType type, std::string value) : type(type), value(value) {}
-  Token(TokenType type, std::string value, std::size_t line)
-      : type(type), value(value), line(line) {}
-  Token(TokenType type, std::string value, std::size_t line, std::size_t column)
-      : type(type), value(value), line(line), column(column) {}
-  Token(TokenType type, std::string value, std::size_t line, std::size_t column,
-        std::size_t at)
-      : type(type), value(value), line(line), column(column), at(at) {}
-  Token(TokenType type, std::string value, std::size_t line, std::size_t column,
-        std::size_t at, std::size_t length)
-      : type(type), value(value), line(line), column(column), at(at),
+  Token(TokenType type, std::string_view value) : type(type), lexem(value) {}
+  Token(TokenType type, std::string_view value, std::size_t line)
+      : type(type), lexem(value), line(line) {}
+  Token(TokenType type, std::string_view value, std::size_t line,
+        std::size_t column)
+      : type(type), lexem(value), line(line), column(column) {}
+  Token(TokenType type, std::string_view value, std::size_t line,
+        std::size_t column, std::size_t at)
+      : type(type), lexem(value), line(line), column(column), at(at) {}
+  Token(TokenType type, std::string_view value, std::size_t line,
+        std::size_t column, std::size_t at, std::size_t length)
+      : type(type), lexem(value), line(line), column(column), at(at),
         length(length) {}
   ~Token() = default;
 
   bool operator==(const TokenType &other) const { return type == other; }
-  bool operator==(const std::string &other) const { return value == other; }
+  bool operator==(const std::string &other) const { return lexem == other; }
   bool operator==(const Token &other) const {
-    return type == other.type && value == other.value;
+    return type == other.type && lexem == other.lexem;
   }
 
   std::string to_string() const {
@@ -140,7 +141,7 @@ struct Token {
     stream << "Token(";
     stream << token_tostring(type);
     stream << ", \"";
-    stream << value;
+    stream << lexem;
     stream << "\", ";
     stream << std::to_string(line);
     stream << ", ";
@@ -227,7 +228,7 @@ struct Token {
 
 template <> struct std::hash<Token> {
   std::size_t operator()(const Token &token) const noexcept {
-    std::size_t h1 = std::hash<std::string>{}(token.value);
+    std::size_t h1 = std::hash<std::string_view>{}(token.lexem);
     return h1;
   }
 };

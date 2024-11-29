@@ -13,9 +13,7 @@
 namespace Analysis {
 
 Context::Context(std::filesystem::path source_file, Reporter &reporter)
-    : m_reporter(reporter), source_file(source_file) {
-  m_reporter.reseek();
-}
+    : m_reporter(reporter), source_file(source_file) {}
 
 bool Context::is_declared(const Token &key) {
   Symbol *symbol = symbol_table.local_first_look_up(key);
@@ -31,8 +29,11 @@ bool Context::is_defined(const Token &key) {
   return symbol->defined;
 }
 
-bool Context::is_in_function(void) const {
-  return current_func != FuncType::None;
+bool Context::is_in_function(void) const { return not function_stack.empty(); }
+Symbol *Context::get_current_function(void) {
+  if (not is_in_function())
+    return nullptr;
+  return function_stack[function_stack.size() - 1];
 }
 bool Context::has_error(void) const { return error_count > 0; }
 bool Context::has_warning(void) const { return warnings_count > 0; }
@@ -55,7 +56,7 @@ void Context::scope_end(void) {
   for (auto &symbol : current_scope) {
     if (not symbol.second.is_used()) {
       report_warning(symbol.first, '~',
-                     std::format("unused variable: `{}`", symbol.first.value),
+                     std::format("unused variable: `{}`", symbol.first.lexem),
                      "This variable never been used.");
     }
   }

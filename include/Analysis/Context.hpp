@@ -18,9 +18,8 @@ public:
   enum class FuncType { None, Function };
 
   ClassType current_class = ClassType::None;
-  FuncType current_func = FuncType::None;
 
-  std::deque<std::string> function_stack;
+  std::deque<Symbol *> function_stack;
   SymbolTable symbol_table;
 
   int error_count = 0;
@@ -33,6 +32,7 @@ public:
   bool is_declared(const Token &key);
   bool is_defined(const Token &key);
   bool is_in_function(void) const;
+  Symbol *get_current_function();
   bool has_error(void) const;
   bool has_warning(void) const;
 

@@ -1,11 +1,9 @@
 #include "Reporter.hpp"
 #include "AST/Statments.hpp"
 #include <cstddef>
-#include <filesystem>
-#include <fstream>
-#include <ios>
 #include <iostream>
 #include <string>
+#include <string_view>
 #include <termcolor/termcolor.hpp>
 
 ReportLocation::ReportLocation(std::size_t line_number, std::size_t column,
@@ -22,9 +20,12 @@ ReportLocation::ReportLocation(std::size_t line_number, std::size_t column,
     : line_number(line_number), column(column), at(at), len(len), caret(caret),
       message(message) {}
 
-Reporter::Reporter(std::ifstream &file,
-                   std::filesystem::path file_source_location)
-    : m_file(file), m_file_source_location(file_source_location) {}
+Reporter::Reporter() {}
+Reporter::Reporter(const std::string_view content,
+                   std::vector<std::string_view> *lines,
+                   std::string file_source_location)
+    : m_lines(lines), m_content(content),
+      m_file_source_location(file_source_location) {}
 
 void Reporter::report(const ReporterType report_type, const std::string &title,
                       const std::initializer_list<ReportLocation> locations) {
@@ -54,8 +55,8 @@ void Reporter::report(const ReporterType report_type, const std::string &title,
               << location.line_number << ":" << location.column << std::endl;
     std::cout << "  |" << std::endl;
 
-    std::cout << location.line_number << " | " << get_line(location.at)
-              << std::endl;
+    std::cout << location.line_number << " | "
+              << get_lines(location.line_number - 1) << std::endl;
 
     std::string caretLine = "  | ";
     for (std::size_t i = 0; i < location.column - 1; ++i) {
@@ -67,11 +68,6 @@ void Reporter::report(const ReporterType report_type, const std::string &title,
   }
 
   std::cout << std::endl;
-}
-
-void Reporter::reseek() {
-  m_file.clear();
-  m_file.seekg(0, std::ios::beg);
 }
 
 std::string Reporter::report_type_as_string(const ReporterType &type) const {
@@ -90,25 +86,28 @@ std::string Reporter::report_type_as_string(const ReporterType &type) const {
   return "Unknown";
 }
 
-std::string Reporter::get_line(std::size_t index) {
-  std::string line;
-  m_file.seekg(index, std::ios::beg);
-
-  if (m_file.fail()) {
-    std::cerr << "Seek failed. Index out of bounds." << std::endl;
-    return "";
-  }
-
-  char ch;
-  while (m_file.tellg() > 0) {
-    m_file.get(ch);
-    if (ch == '\n') {
-      // We've reached the beginning of the line
-      break;
-    }
-    m_file.seekg(-2, std::ios::cur); // Move one byte backward
-  }
-
-  std::getline(m_file, line);
-  return line;
+std::string_view Reporter::get_lines(std::size_t index, std::size_t padding) {
+  // if (index >= m_content.size())
+  //   return {};
+  // std::size_t start = index, end = index, lines = 0;
+  //
+  // while (start > 0) {
+  //   if (m_content[start - 1] == '\n')
+  //     lines++;
+  //   if (lines == padding) {
+  //     lines = 0;
+  //     break;
+  //   }
+  //   --start;
+  // }
+  // while (end < m_content.size()) {
+  //   if (m_content[end] == '\n')
+  //     lines++;
+  //   if (lines == padding)
+  //     break;
+  //   ++end;
+  // }
+  //
+  // return std::string_view(m_content.data() + start, end - start);
+  return (*m_lines)[index];
 }

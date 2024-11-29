@@ -30,7 +30,7 @@ std::unique_ptr<FunctionDef> Parser::function(void) {
     body->start = block_starting_token;
     body->end = previous();
   } else if (match({TokenType::Eq})) {
-    body = expression_statement();
+    body = $return();
   } else {
     throw error(peek(), "Expected either '=' or '{'.");
   }

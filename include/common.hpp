@@ -1,7 +1,7 @@
 #pragma once
 
 #include <iostream>
-#define TABLE_PRINT
+// #define TABLE_PRINT
 
 #define IF
 #define THEN ?

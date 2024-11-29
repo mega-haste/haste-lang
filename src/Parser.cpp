@@ -78,7 +78,7 @@ ParserError Parser::error(const Token &token, const char *message) {
 
 void Parser::report_error(ParserError &error) {
   std::cerr << "[" << error.token.line << ":" << error.token.column
-            << "] Syntax Error at '" << error.token.value
+            << "] Syntax Error at '" << error.token.lexem
             << "': " << error.message << "\n";
 }
 

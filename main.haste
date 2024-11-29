@@ -1,0 +1,7 @@
+
+func xs(x: float): int[5]
+  = [x, x, x, x];
+
+func main() {
+  let x: string = 55;
+}

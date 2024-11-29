@@ -30,4 +30,10 @@ ArrayExpression::get_type(Analysis::Context &ctx) const {
   return res;
 }
 
+void ArrayExpression::analyse(Analysis::Context &ctx) const {
+  for (auto &element : elements) {
+    element->analyse(ctx);
+  }
+}
+
 } // namespace AST

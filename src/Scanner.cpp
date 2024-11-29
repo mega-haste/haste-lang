@@ -4,24 +4,24 @@
 #include <cctype>
 #include <cstddef>
 #include <cstdio>
-#include <filesystem>
 #include <iostream>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <vector>
 
-Scanner::Scanner() : m_current_line("") { setup_keywords(); }
-Scanner::Scanner(const std::filesystem::path &path) : m_source_file(path) {
+Scanner::Scanner() : m_content("") { setup_keywords(); }
+Scanner::Scanner(const std::string_view content,
+                 std::vector<std::string_view> *lines)
+    : m_lines(lines), m_content(content) {
   setup_keywords();
 }
 
-void Scanner::reconstruct(std::string content) {
-  m_current_line = content;
+void Scanner::reconstruct(const std::string_view content) {
+  m_content = content;
   m_current = 0;
   m_start = 0;
   m_column = 1;
-  m_index_start = 0;
-  m_index_end = 0;
   m_tokens.clear();
 }
 
@@ -60,138 +60,133 @@ void Scanner::setup_keywords() {
 }
 
 TokenList Scanner::scan() {
-  while (std::getline(m_source_file, m_current_line)) {
+  while (not at_end()) {
+    m_start = m_current;
     scan_line();
-    m_line++;
-    m_column = 1;
-    m_current = 0;
-    m_start = 0;
-    m_index_end += 1;
-    m_index_start += m_index_end - m_index_start;
   }
   add_token(TokenType::_EOF);
   return m_tokens;
 }
 
-TokenList Scanner::scan_line(void) {
-  while (!at_end()) {
-    m_start = m_current;
-    char c = advance();
-    m_index_start += m_index_end - m_index_start;
-    switch (c) {
-    case '(':
-      add_token(TokenType::OpenParen);
-      break;
-    case ')':
-      add_token(TokenType::CloseParen);
-      break;
-    case '{':
-      add_token(TokenType::OpenCurlyBrase);
-      break;
-    case '}':
-      add_token(TokenType::CloseCurlyBrase);
-      break;
-    case '[':
-      add_token(TokenType::OpenSquareBracket);
-      break;
-    case ']':
-      add_token(TokenType::CloseSquareBracket);
-      break;
-    case '+':
-      add_token(match('=') ? TokenType::PlusEq : TokenType::Plus);
-      break;
-    case '-':
-      add_token(match('=') ? TokenType::MinusEq : TokenType::Minus);
-      break;
-    case '*':
-      add_token(match('=')   ? TokenType::StarEq
-                : match('*') ? match('=') ? TokenType::DoubleStarEq
-                                          : TokenType::DoubleStar
-                             : TokenType::Star);
-      break;
-    case '/':
-      add_token(match('=') ? TokenType::FSlashEq : TokenType::FSlash);
-      break;
-    case '%':
-      add_token(match('=') ? TokenType::PercentSignEq : TokenType::PercentSign);
-      break;
-    case '\\':
-      add_token(TokenType::BSlash);
-      break;
-    case '.':
-      add_token(TokenType::Dot);
-      break;
-    case ';':
-      add_token(TokenType::SemiColon);
-      break;
-    case ',':
-      add_token(TokenType::Comma);
-      break;
-    case ':':
-      add_token(match(':') ? TokenType::ColonColon : TokenType::Colon);
-      break;
-    case '=':
-      add_token(match('=') ? TokenType::EqEq : TokenType::Eq);
-      break;
-    case '&':
-      add_token(TokenType::BitwiseAnd);
-      break;
-    case '|':
-      add_token(TokenType::BitwiseOr);
-      break;
-    case '~':
-      add_token(TokenType::BitwiseNot);
-      break;
-    case '<':
-      add_token(match('=')   ? TokenType::LessThanOrEq
-                : match('<') ? TokenType::BitWiseLeftShift
-                             : TokenType::LessThan);
-      break;
-    case '>':
-      add_token(match('=')   ? TokenType::GreaterThanOrEq
-                : match('>') ? TokenType::BitWiseRightShift
-                             : TokenType::GreaterThan);
-      break;
-    case '!':
-      if (match('=')) {
-        add_token(TokenType::BangEq);
+void Scanner::scan_line(void) {
+  char c = advance();
+  switch (c) {
+  case '(':
+    add_token(TokenType::OpenParen);
+    break;
+  case ')':
+    add_token(TokenType::CloseParen);
+    break;
+  case '{':
+    add_token(TokenType::OpenCurlyBrase);
+    break;
+  case '}':
+    add_token(TokenType::CloseCurlyBrase);
+    break;
+  case '[':
+    add_token(TokenType::OpenSquareBracket);
+    break;
+  case ']':
+    add_token(TokenType::CloseSquareBracket);
+    break;
+  case '+':
+    add_token(match('=') ? TokenType::PlusEq : TokenType::Plus);
+    break;
+  case '-':
+    add_token(match('=') ? TokenType::MinusEq : TokenType::Minus);
+    break;
+  case '*':
+    add_token(match('=') ? TokenType::StarEq
+              : match('*')
+                  ? match('=') ? TokenType::DoubleStarEq : TokenType::DoubleStar
+                  : TokenType::Star);
+    break;
+  case '/':
+    add_token(match('=') ? TokenType::FSlashEq : TokenType::FSlash);
+    break;
+  case '%':
+    add_token(match('=') ? TokenType::PercentSignEq : TokenType::PercentSign);
+    break;
+  case '\\':
+    add_token(TokenType::BSlash);
+    break;
+  case '.':
+    add_token(TokenType::Dot);
+    break;
+  case ';':
+    add_token(TokenType::SemiColon);
+    break;
+  case ',':
+    add_token(TokenType::Comma);
+    break;
+  case ':':
+    add_token(match(':') ? TokenType::ColonColon : TokenType::Colon);
+    break;
+  case '=':
+    add_token(match('=') ? TokenType::EqEq : TokenType::Eq);
+    break;
+  case '&':
+    add_token(TokenType::BitwiseAnd);
+    break;
+  case '|':
+    add_token(TokenType::BitwiseOr);
+    break;
+  case '~':
+    add_token(TokenType::BitwiseNot);
+    break;
+  case '<':
+    add_token(match('=')   ? TokenType::LessThanOrEq
+              : match('<') ? TokenType::BitWiseLeftShift
+                           : TokenType::LessThan);
+    break;
+  case '>':
+    add_token(match('=')   ? TokenType::GreaterThanOrEq
+              : match('>') ? TokenType::BitWiseRightShift
+                           : TokenType::GreaterThan);
+    break;
+  case '!':
+    if (match('=')) {
+      add_token(TokenType::BangEq);
+    } else {
+      Scanner::Ident ident = get_next_ident();
+      std::string id = "!" + ident.value;
+      if (keywords.contains(id)) {
+        ident.skip();
+        add_token(keywords[id]);
       } else {
-        Scanner::Ident ident = get_next_ident();
-        std::string id = "!" + ident.value;
-        if (keywords.contains(id)) {
-          ident.skip();
-          add_token(keywords[id]);
-        } else {
-          std::cerr << "no no !\n";
-        }
+        std::cerr << "no no !\n";
       }
-      break;
-
-    case '#':
-      while (!at_end())
-        advance();
-      break;
-
-    case '\n':
-    case ' ':
-    case '\t':
-    case '\r':
-      m_column++;
-      break;
-
-    default:
-      if (is_alpha(c)) {
-        scan_ident();
-      } else if (is_digit(c)) {
-        scan_numbers();
-      } else if (c == '\'') {
-      } else if (c == '"') {
-        scan_string();
-      }
-      break;
     }
+    break;
+
+  case '#':
+    while (not at_end() and peek() != '\n')
+      advance();
+    break;
+
+  case '\n':
+    m_lines->push_back(
+        m_content.substr(m_line_starting, m_current - m_line_starting - 1));
+    m_column = 0;
+    m_line_starting = m_current;
+    m_line++;
+  case ' ':
+  case '\t':
+  case '\r':
+    m_column++;
+    break;
+
+  default:
+    if (is_alpha(c)) {
+      scan_ident();
+    } else if (is_digit(c)) {
+      scan_numbers();
+    } else if (c == '\'') {
+    } else if (c == '"') {
+      scan_string();
+    }
+    break;
   }
-  return m_tokens;
 }
 
 void Scanner::scan_ident() {
@@ -203,7 +198,7 @@ void Scanner::scan_ident() {
   while (is_alphanum())
     advance();
 
-  std::string buffer = m_current_line.substr(m_start, m_current - m_start);
+  std::string_view buffer = m_content.substr(m_start, m_current - m_start);
   if (keywords.contains(buffer)) {
     add_token(keywords[buffer]);
     return;
@@ -216,8 +211,8 @@ void Scanner::scan_special() {
     advance();
   advance();
 
-  std::string buffer =
-      m_current_line.substr(m_start + 2, m_current - m_start - 3);
+  std::string_view buffer =
+      m_content.substr(m_start + 2, m_current - m_start - 3);
   add_token(TokenType::SpicialIdentifier, buffer);
 }
 
@@ -233,7 +228,7 @@ void Scanner::scan_numbers() {
       advance();
   }
 
-  std::string buffer = m_current_line.substr(m_start, m_current - m_start);
+  std::string_view buffer = m_content.substr(m_start, m_current - m_start);
   add_token(type, buffer);
 }
 
@@ -243,18 +238,18 @@ void Scanner::scan_string() {
   }
   advance();
 
-  std::string buffer =
-      m_current_line.substr(m_start + 1, m_current - m_start - 2);
+  std::string_view buffer =
+      m_content.substr(m_start + 1, m_current - m_start - 2);
   add_token(TokenType::StringLit, buffer);
 }
 
 void Scanner::add_token(TokenType type) {
-  add_token(type, m_current_line.substr(m_start, m_current - m_start));
+  add_token(type, m_content.substr(m_start, m_current - m_start));
 }
 
-void Scanner::add_token(TokenType type, std::string value) {
+void Scanner::add_token(TokenType type, std::string_view value) {
   m_tokens.push_back(
-      Token(type, value, m_line, m_column, m_index_start, m_current - m_start));
+      Token(type, value, m_line, m_column, m_start, m_current - m_start));
   m_column += value.size();
 }
 
@@ -268,13 +263,13 @@ bool Scanner::is(char c) { return peek() == c; }
 char Scanner::peek() {
   if (at_end())
     return '\0';
-  return m_current_line[m_current];
+  return m_content[m_current];
 }
 
 char Scanner::peek(int i) {
   if (at_end(m_current + i))
     return '\0';
-  return m_current_line[m_current + i];
+  return m_content[m_current + i];
 }
 
 bool Scanner::is_alpha() {
@@ -305,32 +300,28 @@ bool Scanner::is_alphanum(char c) { return is_alpha(c) || is_digit(c); }
 bool Scanner::match(char a) {
   if (at_end())
     return false;
-  if (m_current_line[m_current] != a)
+  if (m_content[m_current] != a)
     return false;
 
   m_current++;
   return true;
 }
 
-bool Scanner::at_end() { return m_current >= m_current_line.length(); }
+bool Scanner::at_end() { return m_current >= m_content.length(); }
 
-bool Scanner::at_end(std::size_t i) { return i >= m_current_line.length(); }
+bool Scanner::at_end(std::size_t i) { return i >= m_content.length(); }
 
-char Scanner::advance() {
-  m_index_end++;
-  return m_current_line[m_current++];
-}
+char Scanner::advance() { return m_content[m_current++]; }
 
 char Scanner::advance(std::size_t i) {
   m_current += i;
-  m_index_end += i;
-  return m_current_line[m_current - 1];
+  return m_content[m_current - 1];
 }
 
 Scanner::Ident Scanner::get_next_ident() {
   std::size_t current = m_current;
   std::string buffer = "";
-#define pk m_current_line[current]
+#define pk m_content[current]
   while ((!at_end(current)) && is_alphanum(pk)) {
     buffer.push_back(pk);
     current++;

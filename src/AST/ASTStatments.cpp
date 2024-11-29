@@ -87,18 +87,4 @@ void IfStatement::analyse(Analysis::Context &ctx) const {
   //   otherwise.value()->analyse(ctx);
 }
 
-ReturnStatement::ReturnStatement(std::optional<Expression> &&expr)
-    : expr(std::move(expr)) {}
-std::string ReturnStatement::prettify(const int depth) const {
-  return std::format("{}(return {})", repeat_char(' ', depth),
-                     expr.has_value() ? expr.value()->prettify() : "NONE");
-}
-void ReturnStatement::analyse(Analysis::Context &ctx) const {
-  if (!ctx.is_in_function()) {
-    std::cerr << "[" << "??" << ":" << "??" << "] "
-              << "`return` should be ALWAYS in a function.\n";
-    return;
-  }
-}
-
 } // namespace AST

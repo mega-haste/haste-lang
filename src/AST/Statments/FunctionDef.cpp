@@ -11,8 +11,10 @@ namespace AST {
 static inline void
 define_all_args(Analysis::Context &ctx,
                 std::vector<Analysis::CallableType::Arg> &args) {
-  for (auto &arg : args)
+  for (auto &arg : args) {
+    ctx.declare(arg.name);
     ctx.define(arg.name, arg.type, arg.is_mut);
+  }
 }
 
 FunctionDef::FunctionDef(const Token &identifier,
@@ -30,7 +32,7 @@ std::string FunctionDef::prettify(const int depth) const {
   std::string ssss = repeat_char(' ', depth);
 
   return std::format("{}(func_dec name:{} args:({}) ret_type:{} body:({}))",
-                     ssss, identifier.value, args, return_type->prettify(),
+                     ssss, identifier.lexem, args, return_type->prettify(),
                      body->prettify(depth + 4));
 }
 void FunctionDef::analyse(Analysis::Context &ctx) const {
@@ -38,11 +40,11 @@ void FunctionDef::analyse(Analysis::Context &ctx) const {
 
   ctx.scope_begin();
   define_all_args(ctx, type->arguments);
-  ctx.current_func = Analysis::Context::FuncType::Function;
+  ctx.function_stack.push_back(ctx.local_first_look_up(identifier));
 
   body->analyse(ctx);
 
-  ctx.current_func = Analysis::Context::FuncType::None;
+  ctx.function_stack.pop_back();
   ctx.scope_end();
 }
 Analysis::CallableType::Handler
@@ -54,6 +56,7 @@ FunctionDef::define(Analysis::Context &ctx) const {
     type->arguments.push_back(Analysis::CallableType::Arg(
         argument.identifier, argument.type->get_type(), false));
   }
+  ctx.define(identifier, type, false);
   return type;
 }
 

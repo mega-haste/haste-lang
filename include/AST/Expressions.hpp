@@ -178,6 +178,7 @@ public:
   explicit ArrayExpression(std::vector<Expression> &&elements);
   std::string prettify(void) const override;
   TypeResult get_type(Analysis::Context &ctx) const override;
+  void analyse(Analysis::Context &ctx) const override;
 };
 
 class ScopeResolutionExpression : public ExpressionNode {

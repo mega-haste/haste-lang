@@ -6,6 +6,7 @@
 #include <format>
 #include <memory>
 #include <string>
+#include <string_view>
 
 namespace Analysis {
 
@@ -24,6 +25,12 @@ bool Type::is_compatible_with(const Type::Handler other) const noexcept {
 }
 bool Type::is_reference() const noexcept { return is_ref; }
 bool Type::is_mutable() const noexcept { return is_mut; }
+bool Type::is_void() const noexcept {
+  if (const NativeType *me = dynamic_cast<const NativeType *>(this)) {
+    return me->kind == NativeType::Kind::Void;
+  }
+  return false;
+}
 std::string Type::get_prefixes(void) const {
   return std::string(IF is_ref THEN "&" ELSE "") +
          (IF is_mut THEN "mut" ELSE "") +
@@ -174,7 +181,7 @@ InterfaceType::Handler InterfaceType::make(Token name) {
 }
 InterfaceType::InterfaceType(Token name) : name(name) {}
 std::string InterfaceType::stringfy(void) const noexcept {
-  return get_prefixes() + name.value;
+  return get_prefixes().append(name.lexem);
 }
 bool InterfaceType::is_implemented_by(Type::Handler other) {
   UNUSED(other);
@@ -187,10 +194,15 @@ StructType::Handler StructType::make(Token name) {
 }
 StructType::StructType(Token name) : name(name) {}
 std::string StructType::prettify(void) const noexcept {
-  std::string res = "struct " + name.value + " {\n";
+  std::string res;
+  res.reserve(10 + name.lexem.size());
+  res.append("struct ");
+  res.append(name.lexem);
+  res.append(" {\n");
+
   for (auto &field : fields) {
     res.append("  ");
-    res.append(field.first.value);
+    res.append(field.first.lexem);
     res.append(": ");
     res.append(field.second->prettify());
     res.append(";\n");
@@ -198,7 +210,7 @@ std::string StructType::prettify(void) const noexcept {
   return res + "}\n";
 }
 std::string StructType::stringfy(void) const noexcept {
-  return get_prefixes() + name.value;
+  return get_prefixes().append(name.lexem);
 }
 void StructType::add_field(Token name, Type::Handler field) {
   fields[name] = field;
@@ -229,17 +241,23 @@ EnumType::EnumType(Token name, Type::Handler member_type)
     : name(name), member_type(member_type) {}
 
 std::string EnumType::prettify(void) const noexcept {
-  std::string res = "enum " + name.value + " {\n";
+  std::string res;
+  res.reserve(8);
+  res.append("enum ");
+  res.append(name.lexem);
+
   for (auto &member : members) {
     res.append("  ");
-    res.append(member.first.value);
+    res.append(member.first.lexem);
     res.append(" = ");
     res.append(std::to_string(member.second));
     res.append(",\n");
   }
   return res + "}\n";
 }
-std::string EnumType::stringfy(void) const noexcept { return name.value; }
+std::string EnumType::stringfy(void) const noexcept {
+  return name.lexem.data();
+}
 std::size_t EnumType::get_size(void) const noexcept {
   return member_type->get_size();
 }

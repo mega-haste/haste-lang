@@ -1,8 +1,8 @@
 
 #include "AST/TypeNode.hpp"
 #include "Analysis/Types.hpp"
-#include "common.hpp"
 #include "tokens.hpp"
+#include <charconv>
 #include <cstdlib>
 #include <format>
 #include <iostream>
@@ -20,7 +20,7 @@ TypeNode::TypeResult TypeNode::get_type(void) const {
 
 TypeLiteral::TypeLiteral(const Token &value) : value(std::move(value)) {}
 const std::string TypeLiteral::prettify() const {
-  return std::format("(type_lit {})", value.value);
+  return std::format("(type_lit {})", value.lexem);
 }
 TypeNode::TypeResult TypeLiteral::get_type(void) const {
   switch (value.type) {
@@ -52,7 +52,7 @@ ArrayType::ArrayType(TypeNode::Handler &&type, std::optional<Token> size,
     : type(std::move(type)), size(size), dimention(dimention) {}
 const std::string ArrayType::prettify() const {
   return std::format("(array {}[{}])", type->prettify(),
-                     size.has_value() ? size.value().value : "auto");
+                     size.has_value() ? size.value().lexem : "auto");
 }
 TypeNode::TypeResult ArrayType::get_type(void) const {
   Analysis::ArrayType::Handler res =
@@ -60,9 +60,10 @@ TypeNode::TypeResult ArrayType::get_type(void) const {
   if (size.has_value()) {
     const Token &l = size.value();
     switch (l.type) {
-    case TokenType::IntLit:
-      res->length = std::stoul(l.value);
-      break;
+    case TokenType::IntLit: {
+      std::from_chars(l.lexem.data(), l.lexem.data() + l.lexem.size(),
+                      res->length);
+    } break;
     case TokenType::Auto:
       res->length = 0;
       break;
@@ -85,7 +86,7 @@ TypedIdentifier::TypedIdentifier(const Token &identifier,
                                  TypeNode::Handler &&type)
     : identifier(identifier), type(std::move(type)) {}
 const std::string TypedIdentifier::prettify() const {
-  return std::format("(typed_ident ({}) {})", identifier.value,
+  return std::format("(typed_ident ({}) {})", identifier.lexem,
                      type->prettify());
 }
 

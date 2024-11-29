@@ -2,21 +2,20 @@
 
 #include "tokens.hpp"
 #include <cstddef>
-#include <filesystem>
-#include <fstream>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
 class Scanner {
 public:
   Scanner();
-  Scanner(const std::filesystem::path &path);
+  Scanner(const std::string_view content, std::vector<std::string_view> *lines);
 
   TokenList scan(void);
-  TokenList scan_line(void);
-  void reconstruct(std::string content);
+  void scan_line(void);
+  void reconstruct(const std::string_view content);
 
   static void setup_keywords();
 
@@ -39,17 +38,16 @@ private:
     }
   };
 
-  inline static std::unordered_map<std::string, TokenType> keywords =
-      std::unordered_map<std::string, TokenType>();
-  std::ifstream m_source_file = std::ifstream("");
+  inline static std::unordered_map<std::string_view, TokenType> keywords =
+      std::unordered_map<std::string_view, TokenType>();
+  std::vector<std::string_view> *m_lines;
+  std::vector<Token> m_tokens;
+  std::string_view m_content;
   std::size_t m_current = 0;
   std::size_t m_start = 0;
-  std::string m_current_line = "";
   std::size_t m_line = 1;
   std::size_t m_column = 1;
-  std::size_t m_index_start = 0;
-  std::size_t m_index_end = 0;
-  std::vector<Token> m_tokens;
+  std::size_t m_line_starting = 0;
 
   void scan_ident();
   void scan_special();
@@ -57,7 +55,7 @@ private:
   void scan_string();
 
   void add_token(TokenType type);
-  void add_token(TokenType type, std::string value);
+  void add_token(TokenType type, std::string_view value);
 
   bool ident_match(std::string ident);
   bool is(char c);

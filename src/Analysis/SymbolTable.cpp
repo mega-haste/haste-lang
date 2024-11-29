@@ -20,7 +20,7 @@ void SymbolTable::print_table(void) const {
   for (auto &scope : scopes) {
     std::cout << "\n>>>> Scope " << i << ":\n";
     for (auto &symbol : scope) {
-      std::cout << symbol.first.value << ": "
+      std::cout << symbol.first.lexem << ": "
                 << (IF symbol.second.is_mutable() THEN "mut" ELSE "immut")
                 << " "
                 << (IF symbol.second.type->is_assigned THEN "assigned" ELSE
@@ -43,7 +43,7 @@ void SymbolTable::define(const Token &ident, Type::Handler type, bool mut) {
   if (!current_scope.contains(ident))
     throw std::logic_error(std::format("Expected `{}` to be declared in the "
                                        "current scope. `{}` isn't declared.",
-                                       ident.value, ident.value));
+                                       ident.lexem, ident.lexem));
 
   Symbol &the_symbol = current_scope[ident];
   the_symbol.type = std::move(type);
