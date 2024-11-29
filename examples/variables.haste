@@ -1,0 +1,18 @@
+func main() {
+  # Variables in haste are immutable by default
+  let name: string = "Hesham";
+  # name = 5; # Baaaaad
+
+  let mut age: uint = 17;
+  age++; # Adding 1 to my age (currently I'm 18)
+
+  @println("{}", name);
+
+  !let name; # Explicitly life time terminator
+  # @println("{}", name); # Baaaad!!!!
+
+  let age_ref = &mut age; # mutable reference to age (Type are infered to &mut uint)
+  age_ref += 5;
+
+  @println("{}", age); # 23 (I'm not that old yet '-')
+}
