@@ -32,6 +32,9 @@ func main() {
 
 ## Language progress
 
+<details>
+<summary>Drop down</summary>
+<br/>
 - [x] Scanner
 - [ ] Parser
   - [ ] Expressions
@@ -71,6 +74,7 @@ func main() {
     - [ ] Custom Defined types
     - [ ] Generics
     - [ ] Secret 🤫
+</details>
 
 ## Hello World
 ```haste
@@ -90,11 +94,13 @@ func main() {
 }
 ```
 
-## My goals
+## Design goals
 
-- [ ] Nicer Error messages
-- [ ] Adding a good type-checking & Semantic analysis
-- [ ] Traspiling haste to c (I'm planing on using llvm to compile haste directly to machine code)
+- Compiler works for you, and helps you to understand the error or the problems in your code.
+- Compile time errors are better than run-time ones.
+- Implicit when it needs to be implicit. Explicit when it needs to be explicit.
+- No multiple syntaxes for the same job.
+- Readable syntax.
 
 ## Something
 
