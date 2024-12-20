@@ -1,0 +1,4 @@
+
+func main(argc: int): void {
+  let x: int = 10;
+}

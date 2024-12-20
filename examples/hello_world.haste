@@ -1,0 +1,5 @@
+
+# Here is the string point of our program!!
+func main() {
+  @println("Hello World");
+}

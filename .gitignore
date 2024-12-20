@@ -1,0 +1,6 @@
+build/
+.cache/
+bin/
+.vscode/
+out.txt
+.zig-cache

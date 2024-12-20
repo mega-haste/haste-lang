@@ -1,0 +1,30 @@
+# NOTE: THIS IS NOT COMPLETED AND A LOT OF OTHER OPERATORS MYBE ADDED
+
+func main() {
+  let x = -8;
+  let y = 6;
+
+  @println("{}", x + y);  # Addition
+  @println("{}", x - y);  # Subtraction
+  @println("{}", x / y);  # Divition
+  @println("{}", x * y);  # Multiplication
+  @println("{}", x ** y); # pow
+
+  x += y;
+  x -= y;
+  x /= y;
+  x *= y;
+  x **= y;
+
+  @println("{}", x == y);
+  @println("{}", x != y);
+  @println("{}", x > y);
+  @println("{}", x >= y);
+  @println("{}", x < y);
+  @println("{}", x <= y);
+
+  @println("{}", true and false);
+  @println("{}", true or false);
+  @println("{}", not true);
+  @println("{}", is x);
+}

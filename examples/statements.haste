@@ -1,0 +1,30 @@
+func main() {
+  if true {
+    @println("What's up!!");
+  } else if false {
+    @println("uhh");
+  } else {
+    @println("???");
+  }
+
+  if 1 == 2
+    do @println("Inlined if :3");
+  
+  loop {
+    @println("Loop!!");
+    stop;
+  }
+
+  {
+    let x = 0;
+    while x < 10 {
+      @println("{}", x);
+      x++;
+    }
+  }
+
+  let xs = ["one", "two", "three", "four"];
+  for x in xs {
+    @println("{}", x);
+  }
+}
