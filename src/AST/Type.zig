@@ -13,17 +13,35 @@ pub const Type = struct {
     tp: *Type,
 
     pub fn print(self: *const @This(), depth: u32) void {
-        _ = self;
-        _ = depth;
-        debug.print("UNIMPLEMENTED", .{});
-    }
+        TypeNode.print_identation(depth);
+        debug.print("start: ", .{});
+        self.start.print();
 
-    pub fn deinit(self: *const @This()) void {
-        self.tp.deinit();
+        TypeNode.print_identation(depth);
+        debug.print("end: ", .{});
+        self.end.print();
+
+        self.tp.print(depth);
+    }
+};
+
+pub const Primitive = enum {
+    Int,
+    Float,
+    Bool,
+
+    pub fn stringfy(self: @This()) void {
+        switch (self) {
+            .Int => "Int",
+            .Float => "Float",
+            .Bool => "Bool",
+        }
     }
 };
 
 pub const TypeNode = union(enum) {
+    Primitive: Primitive,
+
     fn get_identation(depth: u32) []const u8 {
         var ident: [100]u8 = undefined;
         @memset(&ident, ' ');
@@ -39,12 +57,21 @@ pub const TypeNode = union(enum) {
     }
 
     pub fn print(self: *const @This(), depth: u32) void {
-        _ = self;
-        _ = depth;
-        debug.print("UNIMPLEMENTED", .{});
-    }
-
-    pub fn deinit(self: *const @This()) void {
-        _ = self;
+        print_identation(depth);
+        switch (self.*) {
+            .Primitive => |v| {
+                debug.print("Primitive: {s}\n", .{v.stringfy()});
+            },
+        }
     }
 };
+
+pub fn create_type(alloc: mem.Allocator, start: *const Token, end: *const Token, tp: *const Token) !*Type {
+    const result = try alloc.create(Type);
+
+    result.start = start;
+    result.end = end;
+    result.tp = tp;
+
+    return result;
+}

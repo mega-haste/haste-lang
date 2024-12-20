@@ -28,25 +28,27 @@ pub const ArgNode = struct {
         StmtNode.print_identation(depth);
         debug.print("ident: ", .{});
         StmtNode.print_token(self.ident);
-        // TODO:
-    }
 
-    pub fn deinit(self: *const @This()) void {
-        self.tp.deinit();
-        if (self.default) |default| {
-            default.deinit();
-        }
+        StmtNode.print_identation(depth);
+        debug.print("tp:\n", .{});
+        self.tp.print(depth + ident_size);
+
+        StmtNode.print_identation(depth);
+        debug.print("default:\n", .{});
+        self.default.print(depth + ident_size);
     }
 };
 
 pub const Visibility = enum { //
     Public,
     Private,
+    Inherited,
 
     pub fn stringfy(self: @This()) []const u8 {
         switch (self) {
             .Public => "public",
             .Private => "private",
+            .Inherited => "inherited",
         }
     }
 };
@@ -71,17 +73,13 @@ pub const Stmt = struct {
 
         self.stmt.print(depth);
     }
-
-    pub fn deinit(self: *const @This()) void {
-        self.stmt.deinit();
-    }
 };
 
 pub const StmtNode = union(enum) {
     ItemFunc: struct {
         identifier: *const Token,
         arguments: []const ArgNode,
-        return_type: ?*TypeMod.Type,
+        return_type: ?*TypeMod.Type = null,
         body: []const Stmt,
 
         pub fn print(self: *const @This(), depth: u32) void {
@@ -89,20 +87,29 @@ pub const StmtNode = union(enum) {
             debug.print("identifier: ", .{});
             print_token(self.identifier);
 
+            print_identation(depth);
+            debug.print("params:\n", .{});
             for (self.arguments, 0..) |argument, i| {
-                print_identation(depth);
+                print_identation(depth + ident_size);
                 debug.print("{}:\n", .{i});
-                argument.print(depth + ident_size);
+                argument.print(depth + (ident_size * 2));
             }
-        }
 
-        pub fn deinit(self: *const @This()) void {
-            self.return_type.deinit();
-            for (self.arguments) |argument| {
-                argument.deinit();
+            print_identation(depth);
+            debug.print("return_type:\n", .{});
+            if (self.return_type) |return_type| {
+                return_type.print(depth + ident_size);
+            } else {
+                print_identation(depth + ident_size);
+                debug.print("NONE\n", .{});
             }
-            for (self.body) |stmt| {
-                stmt.deinit();
+
+            print_identation(depth);
+            debug.print("body:\n", .{});
+            for (self.body, 0..) |stmt, i| {
+                print_identation(depth + ident_size);
+                debug.print("{}:\n", .{i});
+                stmt.print(depth + (ident_size * 2));
             }
         }
     },
@@ -143,15 +150,6 @@ pub const StmtNode = union(enum) {
                 debug.print("NONE\n", .{});
             }
         }
-
-        pub fn deinit(self: *const @This()) void {
-            if (self.init) |init| {
-                init.deinit();
-            }
-            if (self.tp) |tp| {
-                tp.deinit();
-            }
-        }
     },
 
     fn get_identation(depth: u32) []const u8 {
@@ -175,11 +173,40 @@ pub const StmtNode = union(enum) {
             .Let => |v| v.print(depth + ident_size),
         }
     }
-
-    pub fn deinit(self: *const @This()) void {
-        switch (self.*) {
-            .ItemFunc => |v| v.deinit(),
-            .Let => |v| v.deinit(),
-        }
-    }
 };
+
+pub fn init_stmt(start: *const Token, end: *const Token, visibility: Visibility, stmt: *const StmtNode) Stmt {
+    return Stmt{
+        .visibility = visibility,
+        .start = start,
+        .end = end,
+        .stmt = stmt,
+    };
+}
+
+pub fn create_stmt(alloc: mem.Allocator, start: *const Token, end: *const Token, visibility: Visibility, stmt: *const StmtNode) !*Stmt {
+    const result = try alloc.create(Stmt);
+
+    result.visibility = visibility;
+    result.start = start;
+    result.end = end;
+    result.stmt = stmt;
+
+    return result;
+}
+
+pub fn create_func(alloc: mem.Allocator) !*StmtNode {
+    const result = try alloc.create(StmtNode);
+
+    result.* = .{ .ItemFunc = undefined };
+
+    return result;
+}
+
+pub fn create_let(alloc: mem.Allocator) !*StmtNode {
+    const result = try alloc.create(StmtNode);
+
+    result.* = .{ .Let = undefined };
+
+    return result;
+}

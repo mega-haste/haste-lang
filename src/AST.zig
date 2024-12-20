@@ -20,6 +20,14 @@ pub const create_inline_if = ExprMod.create_inline_if;
 
 pub const Stmt = StmtMod.Stmt;
 pub const StmtNode = StmtMod.StmtNode;
+pub const init_stmt = StmtMod.init_stmt;
+pub const create_stmt = StmtMod.create_stmt;
+pub const create_func = StmtMod.create_func;
+pub const create_let = StmtMod.create_let;
+
+pub const Type = TypeMod.Type;
+pub const TypeNode = TypeMod.TypeNode;
+pub const create_type = TypeMod.create_type;
 
 pub const ItemList = std.ArrayList(Stmt);
 

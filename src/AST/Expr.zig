@@ -12,10 +12,6 @@ pub const Expr = struct { //
     end: *const Token,
     expr: *ExprNode,
 
-    pub fn deinit(self: *@This()) void {
-        self.expr.deinit();
-    }
-
     pub fn print(self: *const @This(), depth: u32) void {
         ExprNode.print_identation(depth);
         debug.print("start: ", .{});
@@ -37,10 +33,6 @@ pub const ExprNode = union(enum) { //
         op: *const Token,
         right: *Expr,
 
-        pub fn deinit(self: *const @This()) void {
-            self.right.deinit();
-        }
-
         pub fn print(self: *const @This(), depth: u32) void {
             debug.print("Unary:\n", .{});
             print_identation(depth);
@@ -56,11 +48,6 @@ pub const ExprNode = union(enum) { //
         left: *Expr,
         op: *const Token,
         right: *Expr,
-
-        pub fn deinit(self: *const @This()) void {
-            self.left.deinit();
-            self.right.deinit();
-        }
 
         pub fn print(self: *const @This(), depth: u32) void {
             debug.print("Binary:\n", .{});
@@ -82,11 +69,6 @@ pub const ExprNode = union(enum) { //
         op: *const Token,
         right: *Expr,
 
-        pub fn deinit(self: *const @This()) void {
-            self.left.deinit();
-            self.right.deinit();
-        }
-
         pub fn print(self: *const @This(), depth: u32) void {
             debug.print("LogicalBinary:\n", .{});
             print_identation(depth);
@@ -106,10 +88,6 @@ pub const ExprNode = union(enum) { //
         op: *const Token,
         right: *Expr,
 
-        pub fn deinit(self: *const @This()) void {
-            self.right.deinit();
-        }
-
         pub fn print(self: *const @This(), depth: u32) void {
             debug.print("LogicalUnary:\n", .{});
             print_identation(depth);
@@ -125,11 +103,6 @@ pub const ExprNode = union(enum) { //
         left: *Expr,
         op: *const Token,
         right: *Expr,
-
-        pub fn deinit(self: *const @This()) void {
-            self.right.deinit();
-            self.left.deinit();
-        }
 
         pub fn print(self: *const @This(), depth: u32) void {
             debug.print("Assignment:\n", .{});
@@ -155,12 +128,6 @@ pub const ExprNode = union(enum) { //
         if_token: *const Token,
         then_token: *const Token,
         else_token: *const Token,
-
-        pub fn deinit(self: *const @This()) void {
-            self.condition.deinit();
-            self.consequent.deinit();
-            self.alternate.deinit();
-        }
 
         pub fn print(self: *const @This(), depth: u32) void {
             debug.print("InlineIf:\n", .{});
@@ -224,25 +191,12 @@ pub const ExprNode = union(enum) { //
             },
         }
     }
-
-    pub fn deinit(self: *const @This()) void {
-        switch (self.*) {
-            .Unary => |v| v.deinit(),
-            .Binary => |v| v.deinit(),
-            .LogicalBinary => |v| v.deinit(),
-            .LogicalUnary => |v| v.deinit(),
-            .Assignment => |v| v.deinit(),
-            .InlineIf => |v| v.deinit(),
-            .Grouping => |v| v.deinit(),
-
-            else => {},
-        }
-    }
 };
 
 pub fn create_expr(allocator: mem.Allocator, start: *const Token, end: *const Token, expr: *ExprNode) !*Expr {
     const result = try allocator.create(Expr);
 
+    result.alloc = allocator;
     result.start = start;
     result.end = end;
     result.expr = expr;
