@@ -8,7 +8,7 @@ func main() {
   @println("{}", x - y);  # Subtraction
   @println("{}", x / y);  # Divition
   @println("{}", x * y);  # Multiplication
-  @println("{}", x ** y); # pow
+  @println("{}", x ** y); # Power
 
   x += y;
   x -= y;
@@ -26,5 +26,12 @@ func main() {
   @println("{}", true and false);
   @println("{}", true or false);
   @println("{}", not true);
-  @println("{}", is x);
+  @println("{}", is x); # the thruthness of x
+
+  # Any value is thruthy unless:
+  # * * It's a numiric type and equals 0
+  # * * It's a String and it's length equals 0
+  # * * It's a boolean and equals false
+  # * * It's an optional and equals null
+  # * * It's an error type and got an error
 }

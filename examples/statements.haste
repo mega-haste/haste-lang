@@ -12,7 +12,7 @@ func main() {
   
   loop {
     @println("Loop!!");
-    stop;
+    stop; # Equivalent to `break` in C
   }
 
   {
