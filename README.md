@@ -3,7 +3,7 @@
 ![turbo](./imgs/turbo.png)
 
 ## SWITCHED TO ZIG
-long story short, C++ sucks so i switched to something Zig.
+long story short, C++ sucks so i switched to Zig.
 
 ## How to try haste?
 
