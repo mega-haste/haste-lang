@@ -10,7 +10,7 @@ const ident_size: comptime_int = 2;
 pub const Type = struct {
     start: *const Token,
     end: *const Token,
-    tp: *Type,
+    tp: *const TypeNode,
 
     pub fn print(self: *const @This(), depth: u32) void {
         TypeNode.print_identation(depth);
@@ -29,13 +29,15 @@ pub const Primitive = enum {
     Int,
     Float,
     Bool,
+    Void,
 
-    pub fn stringfy(self: @This()) void {
-        switch (self) {
+    pub fn stringfy(self: @This()) []const u8 {
+        return switch (self) {
             .Int => "Int",
             .Float => "Float",
             .Bool => "Bool",
-        }
+            .Void => "Void",
+        };
     }
 };
 
@@ -66,12 +68,20 @@ pub const TypeNode = union(enum) {
     }
 };
 
-pub fn create_type(alloc: mem.Allocator, start: *const Token, end: *const Token, tp: *const Token) !*Type {
+pub fn create_type(alloc: mem.Allocator, start: *const Token, end: *const Token, tp: *const TypeNode) !*Type {
     const result = try alloc.create(Type);
 
     result.start = start;
     result.end = end;
     result.tp = tp;
+
+    return result;
+}
+
+pub fn create_primitive(alloc: mem.Allocator, tp: Primitive) !*TypeNode {
+    const result = try alloc.create(TypeNode);
+
+    result.* = .{ .Primitive = tp };
 
     return result;
 }

@@ -196,7 +196,6 @@ pub const ExprNode = union(enum) { //
 pub fn create_expr(allocator: mem.Allocator, start: *const Token, end: *const Token, expr: *ExprNode) !*Expr {
     const result = try allocator.create(Expr);
 
-    result.alloc = allocator;
     result.start = start;
     result.end = end;
     result.expr = expr;

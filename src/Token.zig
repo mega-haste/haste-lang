@@ -48,6 +48,11 @@ pub const Type = enum(i8) {
     SpecialIdent, // $"[any]*"
     MacroUse, // @[ident]
 
+    Int,
+    Float,
+    Bool,
+    Void,
+
     True, // 'true'
     False, // 'false'
 

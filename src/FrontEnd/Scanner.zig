@@ -12,6 +12,11 @@ const StaticStringMap = std.StaticStringMap;
 
 // I'm in love with zig <3
 const keywords = create_keywords_map(.{
+    .Int,
+    .Float,
+    .Bool,
+    .Void,
+
     .True,
     .False,
 

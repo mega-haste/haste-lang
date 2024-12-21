@@ -1,4 +1,6 @@
 
-func main(argc: int): void {
-  let x: int = 10;
-}
+func main(argc: int = 0 + 5 / 3): void
+  = 55;
+# {
+#   let x: int = 10;
+# }

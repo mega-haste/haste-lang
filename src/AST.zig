@@ -18,16 +18,21 @@ pub const create_assignment = ExprMod.create_assignment;
 pub const create_primary = ExprMod.create_primary;
 pub const create_inline_if = ExprMod.create_inline_if;
 
+pub const ArgNode = StmtMod.ArgNode;
+
 pub const Stmt = StmtMod.Stmt;
 pub const StmtNode = StmtMod.StmtNode;
 pub const init_stmt = StmtMod.init_stmt;
 pub const create_stmt = StmtMod.create_stmt;
 pub const create_func = StmtMod.create_func;
 pub const create_let = StmtMod.create_let;
+pub const create_expr_stmt = StmtMod.create_expr_stmt;
 
 pub const Type = TypeMod.Type;
+pub const Primitive = TypeMod.Primitive;
 pub const TypeNode = TypeMod.TypeNode;
 pub const create_type = TypeMod.create_type;
+pub const create_primitive = TypeMod.create_primitive;
 
 pub const ItemList = std.ArrayList(Stmt);
 
@@ -39,7 +44,13 @@ pub const ProgramAST = struct { //
     }
 
     pub fn add_item(self: *@This(), item: Stmt) !void {
-        self.items.append(item);
+        try self.items.append(item);
+    }
+
+    pub fn print(self: *const @This()) void {
+        for (self.items.items) |value| {
+            value.print(0);
+        }
     }
 
     pub fn deinit(self: *const @This()) void {

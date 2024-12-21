@@ -57,9 +57,9 @@ pub const TranslationUnit = struct {
         var parser = FrontEnd.Parser.init(self.arena_alloc, self.content, self.tokens.items, &self.program);
         try parser.parse();
 
-        std.debug.print("=======================\n", .{});
-        self.program.expr.?.print(0);
-        std.debug.print("=======================\n", .{});
+        std.debug.print("\n\n", .{});
+        self.program.print();
+        std.debug.print("\n\n", .{});
     }
 
     fn semantic_analysis(self: *@This()) !void {
@@ -73,6 +73,6 @@ pub const TranslationUnit = struct {
     pub fn deinit(self: *@This()) void {
         self.tokens.deinit();
         self.allocator.free(self.content);
-        self.allocator.destroy(self.program);
+        // self.allocator.destroy(self.program);
     }
 };

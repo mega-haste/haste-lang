@@ -13,6 +13,6 @@ pub fn main() !void {
     defer compiler.deinit();
 
     const cwd = try std.fs.path.join(allocator, &[_][]const u8{ try std.fs.realpathAlloc(alloc, "."), "main.haste" });
-    std.log.info("{s}", .{cwd});
+    // std.log.info("{s}", .{cwd});
     try compiler.compile(cwd);
 }

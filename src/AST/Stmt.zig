@@ -35,7 +35,12 @@ pub const ArgNode = struct {
 
         StmtNode.print_identation(depth);
         debug.print("default:\n", .{});
-        self.default.print(depth + ident_size);
+        if (self.default) |default| {
+            default.print(depth + ident_size);
+        } else {
+            StmtNode.print_identation(depth + ident_size);
+            debug.print("NONE\n", .{});
+        }
     }
 };
 
@@ -45,11 +50,11 @@ pub const Visibility = enum { //
     Inherited,
 
     pub fn stringfy(self: @This()) []const u8 {
-        switch (self) {
+        return switch (self) {
             .Public => "public",
             .Private => "private",
             .Inherited => "inherited",
-        }
+        };
     }
 };
 
@@ -79,10 +84,11 @@ pub const StmtNode = union(enum) {
     ItemFunc: struct {
         identifier: *const Token,
         arguments: []const ArgNode,
-        return_type: ?*TypeMod.Type = null,
+        return_type: ?*const TypeMod.Type = null,
         body: []const Stmt,
 
         pub fn print(self: *const @This(), depth: u32) void {
+            debug.print("ItemFunc:\n", .{});
             print_identation(depth);
             debug.print("identifier: ", .{});
             print_token(self.identifier);
@@ -120,6 +126,7 @@ pub const StmtNode = union(enum) {
         init: ?*const ExprMod.Expr = null,
 
         pub fn print(self: *const @This(), depth: u32) void {
+            debug.print("Let:\n", .{});
             print_identation(depth);
             debug.print("identifier: ", .{});
             print_token(self.identifier);
@@ -151,6 +158,7 @@ pub const StmtNode = union(enum) {
             }
         }
     },
+    Expr: *const ExprMod.Expr,
 
     fn get_identation(depth: u32) []const u8 {
         var ident: [100]u8 = undefined;
@@ -171,6 +179,10 @@ pub const StmtNode = union(enum) {
         switch (self.*) {
             .ItemFunc => |v| v.print(depth + ident_size),
             .Let => |v| v.print(depth + ident_size),
+            .Expr => |v| {
+                debug.print("Expr:\n", .{});
+                v.print(depth + ident_size);
+            },
         }
     }
 };
@@ -207,6 +219,14 @@ pub fn create_let(alloc: mem.Allocator) !*StmtNode {
     const result = try alloc.create(StmtNode);
 
     result.* = .{ .Let = undefined };
+
+    return result;
+}
+
+pub fn create_expr_stmt(alloc: mem.Allocator, expr: *const ExprMod.Expr) !*StmtNode {
+    const result = try alloc.create(StmtNode);
+
+    result.* = .{ .Expr = expr };
 
     return result;
 }
