@@ -1,6 +1,5 @@
+func add(x: int, y: int): int = x + y;
 
-func main(argc: int = 0 + 5 / 3): void
-  = 55;
-# {
-#   let x: int = 10;
-# }
+func main(): int {
+  let mut res = 1 + 1;
+}

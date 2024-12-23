@@ -26,6 +26,7 @@ pub const Type = struct {
 };
 
 pub const Primitive = enum {
+    UInt,
     Int,
     Float,
     Bool,
@@ -33,6 +34,7 @@ pub const Primitive = enum {
 
     pub fn stringfy(self: @This()) []const u8 {
         return switch (self) {
+            .UInt => "UInt",
             .Int => "Int",
             .Float => "Float",
             .Bool => "Bool",

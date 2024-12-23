@@ -27,6 +27,8 @@ pub const create_stmt = StmtMod.create_stmt;
 pub const create_func = StmtMod.create_func;
 pub const create_let = StmtMod.create_let;
 pub const create_expr_stmt = StmtMod.create_expr_stmt;
+pub const create_return = StmtMod.create_return;
+pub const create_block = StmtMod.create_block;
 
 pub const Type = TypeMod.Type;
 pub const Primitive = TypeMod.Primitive;

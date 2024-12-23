@@ -85,7 +85,7 @@ pub const StmtNode = union(enum) {
         identifier: *const Token,
         arguments: []const ArgNode,
         return_type: ?*const TypeMod.Type = null,
-        body: []const Stmt,
+        body: Stmt,
 
         pub fn print(self: *const @This(), depth: u32) void {
             debug.print("ItemFunc:\n", .{});
@@ -112,14 +112,16 @@ pub const StmtNode = union(enum) {
 
             print_identation(depth);
             debug.print("body:\n", .{});
-            for (self.body, 0..) |stmt, i| {
-                print_identation(depth + ident_size);
-                debug.print("{}:\n", .{i});
-                stmt.print(depth + (ident_size * 2));
-            }
+            self.body.print(depth + ident_size);
+            // for (self.body, 0..) |stmt, i| {
+            //     print_identation(depth + ident_size);
+            //     debug.print("{}:\n", .{i});
+            //     stmt.print(depth + (ident_size * 2));
+            // }
         }
     },
     Let: struct {
+        mut: ?*const Token,
         identifier: *const Token,
         tp: ?*const TypeMod.Type = null,
         eq: ?*const Token = null,
@@ -127,6 +129,15 @@ pub const StmtNode = union(enum) {
 
         pub fn print(self: *const @This(), depth: u32) void {
             debug.print("Let:\n", .{});
+
+            print_identation(depth);
+            debug.print("mut: ", .{});
+            if (self.mut) |mut| {
+                print_token(mut);
+            } else {
+                debug.print("NONE\n", .{});
+            }
+
             print_identation(depth);
             debug.print("identifier: ", .{});
             print_token(self.identifier);
@@ -158,6 +169,36 @@ pub const StmtNode = union(enum) {
             }
         }
     },
+    Block: struct {
+        stmts: []const Stmt,
+
+        pub fn print(self: *const @This(), depth: u32) void {
+            debug.print("Block:\n", .{});
+            if (self.stmts.len == 0) {
+                print_identation(depth + ident_size);
+                debug.print("NONE\n", .{});
+                return;
+            }
+            for (self.stmts, 0..) |stmt, i| {
+                print_identation(depth + ident_size);
+                debug.print("{}:\n", .{i});
+                stmt.print(depth + (ident_size * 2));
+            }
+        }
+    },
+    Return: struct {
+        expr: ?*const ExprMod.Expr,
+
+        pub fn print(self: *const @This(), depth: u32) void {
+            debug.print("Return: ", .{});
+            if (self.expr) |expr| {
+                debug.print("\n", .{});
+                expr.print(depth + ident_size);
+            } else {
+                debug.print("NONE\n", .{});
+            }
+        }
+    },
     Expr: *const ExprMod.Expr,
 
     fn get_identation(depth: u32) []const u8 {
@@ -179,6 +220,8 @@ pub const StmtNode = union(enum) {
         switch (self.*) {
             .ItemFunc => |v| v.print(depth + ident_size),
             .Let => |v| v.print(depth + ident_size),
+            .Block => |v| v.print(depth + ident_size),
+            .Return => |v| v.print(depth + ident_size),
             .Expr => |v| {
                 debug.print("Expr:\n", .{});
                 v.print(depth + ident_size);
@@ -227,6 +270,22 @@ pub fn create_expr_stmt(alloc: mem.Allocator, expr: *const ExprMod.Expr) !*StmtN
     const result = try alloc.create(StmtNode);
 
     result.* = .{ .Expr = expr };
+
+    return result;
+}
+
+pub fn create_return(alloc: mem.Allocator, expr: ?*const ExprMod.Expr) !*StmtNode {
+    const result = try alloc.create(StmtNode);
+
+    result.* = .{ .Return = .{ .expr = expr } };
+
+    return result;
+}
+
+pub fn create_block(alloc: mem.Allocator, stmts: []const Stmt) !*StmtNode {
+    const result = try alloc.create(StmtNode);
+
+    result.* = .{ .Block = .{ .stmts = stmts } };
 
     return result;
 }

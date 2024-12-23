@@ -12,6 +12,7 @@ const StaticStringMap = std.StaticStringMap;
 
 // I'm in love with zig <3
 const keywords = create_keywords_map(.{
+    .Uint,
     .Int,
     .Float,
     .Bool,
@@ -35,6 +36,8 @@ const keywords = create_keywords_map(.{
     .NotIf,
     .Then,
     .Else,
+
+    .Return,
 });
 
 fn create_keywords_map(comptime keywords_list: anytype) StaticStringMap(TokenType) {

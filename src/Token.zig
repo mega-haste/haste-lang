@@ -48,6 +48,7 @@ pub const Type = enum(i8) {
     SpecialIdent, // $"[any]*"
     MacroUse, // @[ident]
 
+    Uint,
     Int,
     Float,
     Bool,
@@ -74,6 +75,8 @@ pub const Type = enum(i8) {
     NotIf, // '!if'
     Then, // 'then'
     Else, // 'else'
+
+    Return,
 };
 
 pub const Token = struct { //

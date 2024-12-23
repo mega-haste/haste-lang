@@ -60,21 +60,91 @@ pub const Parser = struct {
         return ParserError.UnexpectedToken;
     }
 
-    fn declaration(self: *@This()) ParserError!void { //
-        _ = self;
+    fn declaration(self: *@This()) ParserError!Stmt {
+        const start = self.peek();
+        const dec: *const StmtNode = dec_res: {
+            if (self.match(TokenType.Let)) |_| {
+                break :dec_res try self.let();
+            }
+
+            return self.statement();
+        };
+
+        const end = self.previous();
+        return AST.init_stmt(start, end, .Inherited, dec);
     }
 
-    fn statement(self: *@This()) ParserError!void { //
-        _ = self;
+    fn statement(self: *@This()) ParserError!Stmt {
+        const start = self.peek();
+        const stmt: *const StmtNode = stmt_res: {
+            if (self.match(TokenType.Return)) |_| {
+                break :stmt_res try self._return();
+            } else if (self.match(TokenType.OpenCurlyParen)) |_| {
+                break :stmt_res try self.block();
+            }
+
+            return self.statement_expr();
+        };
+
+        const end = self.previous();
+        return AST.init_stmt(start, end, .Inherited, stmt);
     }
 
     fn statement_expr(self: *@This()) ParserError!Stmt {
         const start = self.peek();
         const expr = try self.parse_expr();
+        _ = try self.consume(.SemiColon, "Expected `;` at the end of the expression.");
         const end = self.previous();
 
         const stmt = AST.create_expr_stmt(self.allocator, expr) catch return ParserError.BadAllocation;
         return AST.init_stmt(start, end, .Inherited, stmt);
+    }
+
+    fn let(self: *@This()) ParserError!*StmtNode {
+        const mut = self.match(TokenType.Mut);
+        const ident = try self.consume_iden("Expected the variable name.");
+        var tp: ?*const AST.Type = null;
+        if (self.match(TokenType.Colon)) |_| {
+            tp = try self.parse_type();
+        }
+        var eq: ?*const Token = null;
+        var expr: ?*const Expr = null;
+        if (self.match(TokenType.Eq)) |token| {
+            eq = token;
+            expr = try self.parse_expr();
+        }
+
+        _ = try self.consume(.SemiColon, "Expected `;` at the end of 'let' statement.");
+
+        const res = AST.create_let(self.allocator) catch return ParserError.BadAllocation;
+        res.Let = .{ .mut = mut, .identifier = ident, .tp = tp, .eq = eq, .init = expr };
+        return res;
+    }
+
+    fn _return(self: *@This()) ParserError!*StmtNode {
+        const res = AST.create_return(self.allocator, null) catch return ParserError.BadAllocation;
+        if (self.match(TokenType.SemiColon)) |_| {
+            return res;
+        }
+
+        const expr = try self.parse_expr();
+        _ = try self.consume(.SemiColon, "Expected `;` at the end of 'return'.");
+
+        res.Return.expr = expr;
+        return res;
+    }
+
+    fn block(self: *@This()) ParserError!*StmtNode {
+        var stmts = std.ArrayList(Stmt).init(self.page_allocator);
+        while (!self.check(TokenType.CloseCurlyParen)) {
+            stmts.append(try self.declaration()) catch return ParserError.BadAllocation;
+        }
+        _ = try self.consume(.CloseCurlyParen, "Expected `}` at the end of the block.");
+
+        stmts.shrinkAndFree(stmts.items.len);
+
+        const res = AST.create_block(self.allocator, stmts.items) catch return ParserError.BadAllocation;
+        return res;
     }
 
     fn function(self: *@This()) ParserError!*StmtNode {
@@ -96,18 +166,25 @@ pub const Parser = struct {
             return_type = try self.parse_type();
         }
 
-        var body = std.ArrayList(AST.Stmt).init(self.allocator);
-        _ = try self.consume(.Eq, "Expected '='.");
-        body.append(try self.statement_expr()) catch return ParserError.BadAllocation;
+        const body_start = self.peek();
+        var body: Stmt = undefined;
+        if (self.match(TokenType.Eq)) |_| {
+            body.stmt = try self._return();
+        } else if (self.match(TokenType.OpenCurlyParen)) |_| {
+            body.stmt = try self.block();
+        } else {
+            return ParserError.UnexpectedToken;
+        }
 
-        _ = try self.consume(.SemiColon, "Expected ';'.");
+        body.start = body_start;
+        body.end = self.previous();
 
         const stmt = AST.create_func(self.allocator) catch return ParserError.BadAllocation;
         stmt.ItemFunc = .{ //
             .identifier = ident,
             .arguments = params.items,
             .return_type = return_type,
-            .body = body.items,
+            .body = body,
         };
 
         return stmt;
@@ -137,6 +214,7 @@ pub const Parser = struct {
     fn parse_type(self: *@This()) ParserError!*AST.Type {
         const start = self.peek();
         const tp = AST.create_primitive(self.allocator, switch (self.peek().kind) {
+            .Uint => AST.Primitive.UInt,
             .Int => AST.Primitive.Int,
             .Float => AST.Primitive.Float,
             .Bool => AST.Primitive.Bool,
