@@ -17,6 +17,7 @@ pub const create_logical_unary = ExprMod.create_logical_unary;
 pub const create_assignment = ExprMod.create_assignment;
 pub const create_primary = ExprMod.create_primary;
 pub const create_inline_if = ExprMod.create_inline_if;
+pub const create_call = ExprMod.create_call;
 
 pub const ArgNode = StmtMod.ArgNode;
 

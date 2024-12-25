@@ -1,6 +1,8 @@
 const std = @import("std");
+const DataStructure = @import("../DataStructure.zig");
 const TokenMod = @import("../Token.zig");
 
+const LinkedList = DataStructure.LinkedList;
 const Token = TokenMod.Token;
 const mem = std.mem;
 const debug = std.debug;
@@ -158,6 +160,39 @@ pub const ExprNode = union(enum) { //
         }
     },
 
+    Call: struct {
+        callee: *Expr,
+        paren: *const Token,
+        args: LinkedList(*Expr),
+
+        pub fn print(self: *const @This(), depth: u32) void {
+            debug.print("Call:\n", .{});
+
+            print_identation(depth);
+            debug.print("paren: ", .{});
+            self.paren.print();
+
+            print_identation(depth);
+            debug.print("callee:\n", .{});
+            self.callee.print(depth + ident_size);
+
+            print_identation(depth);
+            debug.print("args:\n", .{});
+            if (self.args.len == 0) {
+                print_identation(depth + ident_size);
+                debug.print("NONE\n", .{});
+                return;
+            }
+            var iter = self.args.iter();
+            var i: i32 = 0;
+            while (iter.next()) |arg| : (i += 1) {
+                print_identation(depth + ident_size);
+                debug.print("{}:\n", .{i});
+                arg.value.print(depth + (ident_size * 2));
+            }
+        }
+    },
+
     fn get_identation(depth: u32) []const u8 {
         var ident: [100]u8 = undefined;
         @memset(&ident, ' ');
@@ -181,6 +216,7 @@ pub const ExprNode = union(enum) { //
             .LogicalUnary => |v| v.print(depth + ident_size),
             .Assignment => |v| v.print(depth + ident_size),
             .InlineIf => |v| v.print(depth + ident_size),
+            .Call => |v| v.print(depth + ident_size),
             .Grouping => |v| {
                 debug.print("Grouping:\n", .{});
                 v.print(depth + ident_size);
@@ -262,6 +298,14 @@ pub fn create_inline_if(allocator: mem.Allocator, condition: *Expr, consequent: 
     const result = try allocator.create(ExprNode);
 
     result.* = .{ .InlineIf = .{ .condition = condition, .consequent = consequent, .alternate = alternate, .if_token = undefined, .then_token = undefined, .else_token = undefined } };
+
+    return result;
+}
+
+pub fn create_call(allocator: mem.Allocator, callee: *Expr, paren: *const Token, args: LinkedList(*Expr)) !*ExprNode {
+    const result = try allocator.create(ExprNode);
+
+    result.* = .{ .Call = .{ .callee = callee, .paren = paren, .args = args } };
 
     return result;
 }

@@ -1,5 +1,11 @@
 func add(x: int, y: int): int = x + y;
 
 func main(): int {
-  let mut res = 1 + 1;
+  func fac(x: int): int
+    = if x <= 1 then
+        1
+      else
+        x * fac(x - 1);
+  let mut res = fact(add(5, 4));
+  return res;
 }
