@@ -1,5 +1,6 @@
 const std = @import("std");
 const Compiler = @import("./Compiler.zig").Compiler;
+const ReporterMod = @import("./Reporter.zig");
 
 const unicode = std.unicode;
 
@@ -11,7 +12,11 @@ pub fn main() !void {
 
     const alloc = arena.allocator();
 
-    var compiler = Compiler.init(allocator, alloc);
+    const stdout_file = std.io.getStdOut().writer();
+    // var bw = std.io.bufferedWriter(stdout_file);
+    // const stdout = bw.writer();
+
+    var compiler = Compiler.init(allocator, alloc, stdout_file);
     defer compiler.deinit();
 
     const cwd = try std.fs.path.join(allocator, &[_][]const u8{ try std.fs.realpathAlloc(alloc, "."), "main.haste" });
@@ -20,16 +25,14 @@ pub fn main() !void {
 }
 
 test {
-    const str = "Wsup السلام عليكم";
+    // stdout is for the actual output of your application, for example if you
+    // are implementing gzip, then only the compressed bytes should be sent to
+    // stdout, not any debugging messages.
+    const stdout_file = std.io.getStdOut().writer();
+    var bw = std.io.bufferedWriter(stdout_file);
+    const stdout = bw.writer();
 
-    std.debug.print("str.len: {}, txt: {s}\n", .{ str.len, str });
+    try stdout.print("Run `zig build test` to run the tests.\n", .{});
 
-    const uni_view = try unicode.Utf8View.init(str);
-    var iter = uni_view.iterator();
-    var prev_i: usize = iter.i;
-
-    while (iter.nextCodepoint()) |b| {
-        std.debug.print("b: {u}, i: {}, len: {}\n", .{ b, iter.i, iter.i - prev_i });
-        prev_i = iter.i;
-    }
+    try bw.flush(); // don't forget to flush!
 }

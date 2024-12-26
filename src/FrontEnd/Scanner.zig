@@ -287,7 +287,7 @@ pub const Scanner = struct {
         return StringView.from_slice(self.content.bytes, self.start, self.get_current() - self.start);
     }
 
-    fn previous(self: *const @This()) u21 {
+    inline fn previous(self: *const @This()) u21 {
         return self.previous_u;
     }
 
@@ -312,7 +312,7 @@ pub const Scanner = struct {
         return self.get_current() >= self.content.bytes.len;
     }
 
-    fn get_current(self: *const @This()) usize {
+    inline fn get_current(self: *const @This()) usize {
         return self.current;
         // return self.content.i;
     }

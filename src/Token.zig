@@ -1,7 +1,10 @@
 const std = @import("std");
+const ReporterMod = @import("./Reporter.zig");
 const ArrayList = std.ArrayList;
 
 const StringView = @import("./DataStructure.zig").StringView;
+
+const Report = ReporterMod.Report;
 
 pub const Type = enum(i8) {
     EOF = -1,
@@ -93,6 +96,15 @@ pub const Token = struct { //
 
     pub fn print(self: *const @This()) void {
         std.debug.print("Token(\"{s}\", {}, line: {}, column: {})\n", .{ self.lexem.data, self.kind, self.line, self.column });
+    }
+
+    pub inline fn get_index(self: *const @This()) usize {
+        return self.start;
+    }
+
+    pub fn make_report(self: *const @This(), msg: []const u8) Report {
+        const res = Report.init(self.line, self.column, self.get_index(), msg);
+        return res;
     }
 };
 

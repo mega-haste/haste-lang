@@ -1,22 +1,21 @@
 const std = @import("std");
 
 const TranslationUnit = @import("./TranslationUnit.zig").TranslationUnit;
-const Reporter = @import("./Reporter.zig").Reporter;
 
 const mem = std.mem;
 const StringHashMap = std.StringHashMap;
 
 pub const Compiler = struct {
+    stdout: std.fs.File.Writer,
     allocator: mem.Allocator,
     arena_alloc: mem.Allocator,
-    reporter: Reporter,
     translation_units: StringHashMap(TranslationUnit),
 
-    pub fn init(allocator: mem.Allocator, arena_alloc: mem.Allocator) Compiler {
+    pub fn init(allocator: mem.Allocator, arena_alloc: mem.Allocator, stdout: std.fs.File.Writer) Compiler {
         return Compiler{ //
+            .stdout = stdout,
             .allocator = allocator,
             .arena_alloc = arena_alloc,
-            .reporter = Reporter.init(),
             .translation_units = StringHashMap(TranslationUnit).init(allocator),
         };
     }
@@ -28,7 +27,6 @@ pub const Compiler = struct {
     }
 
     pub fn deinit(self: *@This()) void {
-        self.reporter.deinit();
         var itr = self.translation_units.iterator();
         while (itr.next()) |entry| {
             entry.value_ptr.deinit();
