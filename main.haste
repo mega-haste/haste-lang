@@ -1,6 +1,7 @@
 func add(x: int, y: int): int = x + y;
 
 func main(): int {
+  let name = "مرحبا";
   func fac(x: int): int
     = if x <= 1 then
         1

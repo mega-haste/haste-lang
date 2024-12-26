@@ -8,6 +8,7 @@ const TokenList = TokenMod.TokenList;
 const StringView = DataStructure.StringView;
 
 const mem = std.mem;
+const unicode = std.unicode;
 const StaticStringMap = std.StaticStringMap;
 
 // I'm in love with zig <3
@@ -67,31 +68,35 @@ pub const Scanner = struct {
     column: usize = 1,
     current: usize = 0,
     start: usize = 0,
+    previous_u: u21 = 0x0,
+    current_u: u21 = 0x0,
     tokens: *TokenList,
-    content: []const u8,
+    content: unicode.Utf8Iterator,
 
     const Ident = struct {
         lexem: StringView,
         scanner: *Scanner,
 
         pub fn revert(self: *@This()) void {
-            self.scanner.current -= self.lexem.get_len();
+            self.scanner.content.i -= self.lexem.get_len();
         }
     };
 
-    pub fn init(tokens: *TokenList, content: []const u8) Scanner {
-        return .{ .tokens = tokens, .content = content };
+    pub fn init(tokens: *TokenList, content: []const u8) !Scanner {
+        return .{ .tokens = tokens, .content = (try unicode.Utf8View.init(content)).iterator() };
     }
 
     pub fn scan(self: *@This()) !void {
         var has_error: ?anyerror = null;
+        _ = self.advance();
+        self.current = 0;
         while (!self.is_at_end()) {
-            self.start = self.current;
+            self.start = self.get_current();
             self.scan_lexem() catch |err| {
                 has_error = err;
-                std.debug.print("InvalidCharacter: '{c}'\n", .{self.previous()});
+                std.debug.print("InvalidCharacter: '{u}'\n", .{self.previous()});
             };
-            self.column += self.current - self.start;
+            self.column += self.get_current() - self.start;
         }
 
         try self.tokens.append(Token.create(TokenType.EOF, StringView.from_string(""), 0, 0, 0, 0));
@@ -144,7 +149,7 @@ pub const Scanner = struct {
                         try self.add_token(kind);
                     } else {
                         next_ident.revert();
-                        self.current += 1;
+                        _ = self.advance();
                         return ScannerError.InvalidCharacter;
                     }
                 } else {
@@ -256,48 +261,59 @@ pub const Scanner = struct {
     }
 
     fn add_token(self: *const @This(), kind: TokenType) !void {
-        try self.tokens.append(Token.create(kind, try self.get_lexem(), self.line, self.column, self.start, self.current));
+        try self.tokens.append(Token.create(kind, try self.get_lexem(), self.line, self.column, self.start, self.get_current()));
     }
 
-    fn is_digit(ch: u8) bool {
+    fn is_digit(ch: u21) bool {
         return ch >= '0' and ch <= '9';
     }
 
-    fn is_alpha(ch: u8) bool {
+    fn is_alpha(ch: u21) bool {
         return (ch >= 'a' and ch <= 'z') or ch == '_' or ch == '$';
     }
 
-    fn is_alpha_num(ch: u8) bool {
+    fn is_alpha_num(ch: u21) bool {
         return Scanner.is_digit(ch) or Scanner.is_alpha(ch);
     }
 
-    fn match(self: *@This(), ch: u8) ?u8 {
+    fn match(self: *@This(), ch: u21) ?u21 {
         if (self.is_at_end()) return null;
-        if (self.content[self.current] != ch) return null;
+        if (self.current_u != ch) return null;
 
         return self.advance();
     }
 
     fn get_lexem(self: *const @This()) !StringView {
-        return StringView.from_slice(self.content, self.start, self.current - self.start);
+        return StringView.from_slice(self.content.bytes, self.start, self.get_current() - self.start);
     }
 
-    fn previous(self: *const @This()) u8 {
-        return self.content[self.current - 1];
+    fn previous(self: *const @This()) u21 {
+        return self.previous_u;
     }
 
-    fn peek(self: *const @This()) u8 {
+    fn peek(self: *const @This()) u21 {
         if (self.is_at_end()) return 0x0;
-        return self.content[self.current];
+        return self.current_u;
     }
 
-    fn advance(self: *@This()) u8 {
+    fn advance(self: *@This()) u21 {
         if (self.is_at_end()) return 0x0;
-        self.current += 1;
-        return self.content[self.current - 1];
+        self.previous_u = self.current_u;
+        self.current_u = self.content.nextCodepoint() orelse 0x0;
+
+        var code_point: [4]u8 = undefined;
+        const size = unicode.utf8Encode(self.current_u, &code_point) catch unreachable;
+        self.current += size;
+
+        return self.previous_u;
     }
 
     fn is_at_end(self: *const @This()) bool {
-        return self.current >= self.content.len or self.content[self.current] == 0x0;
+        return self.get_current() >= self.content.bytes.len;
+    }
+
+    fn get_current(self: *const @This()) usize {
+        return self.current;
+        // return self.content.i;
     }
 };

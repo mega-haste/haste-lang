@@ -19,12 +19,11 @@ pub const TranslationUnit = struct {
         defer file.close();
 
         const size = try file.getEndPos();
-        const content = try allocator.alloc(u8, size + 1);
+        const content = try allocator.alloc(u8, size);
 
         const byte_read = try file.readAll(content);
         if (byte_read < size)
             return fs.File.ReadError.Unexpected;
-        content[size] = 0x0;
 
         return TranslationUnit{ //
             .allocator = allocator,
@@ -43,14 +42,14 @@ pub const TranslationUnit = struct {
     }
 
     fn lexical_analysis(self: *@This()) !void {
-        var scanner = FrontEnd.Scanner.init(&self.tokens, self.content);
+        var scanner = try FrontEnd.Scanner.init(&self.tokens, self.content);
         try scanner.scan();
 
         self.tokens.shrinkAndFree(self.tokens.items.len);
 
-        // for (self.tokens.items) |token| {
-        //     token.print();
-        // }
+        for (self.tokens.items) |token| {
+            token.print();
+        }
     }
 
     fn syntax_analysis(self: *@This()) !void {
