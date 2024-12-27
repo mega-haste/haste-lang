@@ -102,8 +102,14 @@ pub const Token = struct { //
         return self.start;
     }
 
-    pub fn make_report(self: *const @This(), msg: []const u8) Report {
-        const res = Report.init(self.line, self.column, self.get_index(), msg);
+    pub inline fn get_len(self: *const @This()) usize {
+        return self.end - self.start;
+    }
+
+    pub fn make_report(self: *const @This(), kind: ReporterMod.ReportType, msg: []const u8) Report {
+        var res = Report.init(self.line, self.column, self.get_index(), msg);
+        res.kind = kind;
+        res.len = self.get_len();
         return res;
     }
 };

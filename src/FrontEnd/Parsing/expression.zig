@@ -34,9 +34,19 @@ fn parse_inline_if(self: *Parser) ParserError!*Expr {
 
     const then_token = try self.consume(.Then, "Expected 'then'.");
     const consequent = try parse_expr(self);
+    // catch |err| {
+    //     if (err == ParserError.BadAllocation) return err;
+    //     self.report_error(self.peek(), "Expected expression.");
+    //     return err;
+    // };
 
     const else_token = try self.consume(.Else, "Expected 'else'.");
     const alternate = try parse_expr(self);
+    //     catch |err| {
+    //     if (err == ParserError.BadAllocation) return err;
+    //     self.report_error(self.peek(), "Expected expression.");
+    //     return err;
+    // };
 
     const end = self.previous();
     const tmp = AST.create_inline_if(self.allocator, condition, consequent, alternate) catch return ParserError.BadAllocation;
@@ -213,7 +223,12 @@ fn finish_call(self: *Parser, callee: *Expr) ParserError!*ExprNode {
         }
     }
 
-    _ = try self.consume(.CloseParen, "Expect ')' after arguments.");
+    // _ = try self.consume(.CloseParen, "Expected ')' after arguments.");
+
+    _ = self.consume(.CloseParen, "Expected ')' after arguments.") catch |err| {
+        // std.debug.panic("here\n.", .{});
+        return err;
+    };
 
     return AST.create_call(self.allocator, callee, paren, arguments) catch ParserError.BadAllocation;
 }
@@ -240,6 +255,5 @@ fn parse_primary(self: *Parser) ParserError!*Expr {
         return parse_inline_if(self);
     }
 
-    debug.print("Got '{s}'.\n", .{self.peek().lexem.data});
-    return ParserError.UnexpectedToken;
+    return ParserError.ExpectedExpression;
 }

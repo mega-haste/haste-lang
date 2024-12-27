@@ -12,27 +12,23 @@ pub fn main() !void {
 
     const alloc = arena.allocator();
 
-    const stdout_file = std.io.getStdOut().writer();
+    const stdout = std.io.getStdOut();
+
     // var bw = std.io.bufferedWriter(stdout_file);
     // const stdout = bw.writer();
 
-    var compiler = Compiler.init(allocator, alloc, stdout_file);
+    var compiler = Compiler.init(allocator, alloc, stdout);
     defer compiler.deinit();
 
     const cwd = try std.fs.path.join(allocator, &[_][]const u8{ try std.fs.realpathAlloc(alloc, "."), "main.haste" });
     // std.log.info("{s}", .{cwd});
-    try compiler.compile(cwd);
+    compiler.compile(cwd) catch {
+        compiler.deinit();
+        std.process.exit(2);
+    };
 }
 
 test {
-    // stdout is for the actual output of your application, for example if you
-    // are implementing gzip, then only the compressed bytes should be sent to
-    // stdout, not any debugging messages.
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
-
-    try stdout.print("Run `zig build test` to run the tests.\n", .{});
-
-    try bw.flush(); // don't forget to flush!
+    const stdout = std.io.getStdOut();
+    _ = stdout;
 }

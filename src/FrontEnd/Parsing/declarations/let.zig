@@ -24,7 +24,7 @@ const debug = std.debug;
 
 pub fn let(self: *Parser) ParserError!*StmtNode {
     const mut = self.match(TokenType.Mut);
-    const ident = try self.consume_iden("Expected the variable name.");
+    const ident = try self.consume_iden(if (mut) |_| "Expected variable name." else "Expected `mut` or the variable name.");
     var tp: ?*const AST.Type = null;
     if (self.match(TokenType.Colon)) |_| {
         tp = try parse_type(self);
@@ -36,7 +36,7 @@ pub fn let(self: *Parser) ParserError!*StmtNode {
         expr = try Expression.parse_expr(self);
     }
 
-    _ = try self.consume(.SemiColon, "Expected `;` at the end of 'let' statement.");
+    _ = try self.consume_semi_colon("Expected `;` at the end of 'let' statement.");
 
     const res = AST.create_let(self.allocator) catch return ParserError.BadAllocation;
     res.Let = .{ .mut = mut, .identifier = ident, .tp = tp, .eq = eq, .init = expr };

@@ -1,6 +1,7 @@
 const std = @import("std");
 const TokenMod = @import("../Token.zig");
 const DataStructure = @import("../DataStructure.zig");
+const ReporterMod = @import("../Reporter.zig");
 
 const Token = TokenMod.Token;
 const TokenType = TokenMod.Type;
@@ -64,6 +65,7 @@ fn create_keywords_map(comptime keywords_list: anytype) StaticStringMap(TokenTyp
 pub const ScannerError = error{InvalidCharacter};
 
 pub const Scanner = struct {
+    stdout: std.fs.File,
     line: usize = 1,
     column: usize = 1,
     current: usize = 0,
@@ -82,8 +84,8 @@ pub const Scanner = struct {
         }
     };
 
-    pub fn init(tokens: *TokenList, content: []const u8) !Scanner {
-        return .{ .tokens = tokens, .content = (try unicode.Utf8View.init(content)).iterator() };
+    pub fn init(tokens: *TokenList, content: []const u8, stdout: std.fs.File) !Scanner {
+        return .{ .stdout = stdout, .tokens = tokens, .content = (try unicode.Utf8View.init(content)).iterator() };
     }
 
     pub fn scan(self: *@This()) !void {
@@ -94,7 +96,7 @@ pub const Scanner = struct {
             self.start = self.get_current();
             self.scan_lexem() catch |err| {
                 has_error = err;
-                std.debug.print("InvalidCharacter: '{u}'\n", .{self.previous()});
+                ReporterMod.reporter.report(self.stdout, self.content.bytes, .Error, "Enexpected token.", &[_]ReporterMod.Report{ReporterMod.Report.init(self.line, self.column, self.start, "")});
             };
             self.column += self.get_current() - self.start;
         }

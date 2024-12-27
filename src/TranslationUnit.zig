@@ -7,6 +7,7 @@ const fs = std.fs;
 const mem = std.mem;
 
 pub const TranslationUnit = struct {
+    stdout: std.fs.File,
     allocator: mem.Allocator,
     arena_alloc: mem.Allocator,
     path: []const u8,
@@ -14,7 +15,7 @@ pub const TranslationUnit = struct {
     tokens: TokenMod.TokenList,
     program: AST.ProgramAST,
 
-    pub fn init(allocator: mem.Allocator, arena_alloc: mem.Allocator, path: []const u8) anyerror!TranslationUnit {
+    pub fn init(allocator: mem.Allocator, arena_alloc: mem.Allocator, path: []const u8, stdout: std.fs.File) anyerror!TranslationUnit {
         const file = try fs.openFileAbsolute(path, .{ .mode = .read_only });
         defer file.close();
 
@@ -26,6 +27,7 @@ pub const TranslationUnit = struct {
             return fs.File.ReadError.Unexpected;
 
         return TranslationUnit{ //
+            .stdout = stdout,
             .allocator = allocator,
             .arena_alloc = arena_alloc,
             .path = path,
@@ -42,18 +44,18 @@ pub const TranslationUnit = struct {
     }
 
     fn lexical_analysis(self: *@This()) !void {
-        var scanner = try FrontEnd.Scanner.init(&self.tokens, self.content);
+        var scanner = try FrontEnd.Scanner.init(&self.tokens, self.content, self.stdout);
         try scanner.scan();
 
         self.tokens.shrinkAndFree(self.tokens.items.len);
 
-        for (self.tokens.items) |token| {
-            token.print();
-        }
+        // for (self.tokens.items) |token| {
+        //     token.print();
+        // }
     }
 
     fn syntax_analysis(self: *@This()) !void {
-        var parser = FrontEnd.Parser.init(self.arena_alloc, self.content, self.tokens.items, &self.program);
+        var parser = FrontEnd.Parser.init(self.arena_alloc, self.stdout, self.content, self.tokens.items, &self.program);
         try parser.parse();
 
         std.debug.print("\n", .{});

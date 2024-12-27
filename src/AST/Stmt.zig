@@ -200,6 +200,7 @@ pub const StmtNode = union(enum) {
         }
     },
     Expr: *const ExprMod.Expr,
+    None,
 
     fn get_identation(depth: u32) []const u8 {
         var ident: [100]u8 = undefined;
@@ -222,6 +223,7 @@ pub const StmtNode = union(enum) {
             .Let => |v| v.print(depth + ident_size),
             .Block => |v| v.print(depth + ident_size),
             .Return => |v| v.print(depth + ident_size),
+            .None => |_| debug.print("None.\n", .{}),
             .Expr => |v| {
                 debug.print("Expr:\n", .{});
                 v.print(depth + ident_size);
@@ -286,6 +288,14 @@ pub fn create_block(alloc: mem.Allocator, stmts: []const Stmt) !*StmtNode {
     const result = try alloc.create(StmtNode);
 
     result.* = .{ .Block = .{ .stmts = stmts } };
+
+    return result;
+}
+
+pub fn create_none_stmt(alloc: mem.Allocator) !*StmtNode {
+    const result = try alloc.create(StmtNode);
+
+    result.* = .{ .None = {} };
 
     return result;
 }

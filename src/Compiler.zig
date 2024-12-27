@@ -6,12 +6,12 @@ const mem = std.mem;
 const StringHashMap = std.StringHashMap;
 
 pub const Compiler = struct {
-    stdout: std.fs.File.Writer,
+    stdout: std.fs.File,
     allocator: mem.Allocator,
     arena_alloc: mem.Allocator,
     translation_units: StringHashMap(TranslationUnit),
 
-    pub fn init(allocator: mem.Allocator, arena_alloc: mem.Allocator, stdout: std.fs.File.Writer) Compiler {
+    pub fn init(allocator: mem.Allocator, arena_alloc: mem.Allocator, stdout: std.fs.File) Compiler {
         return Compiler{ //
             .stdout = stdout,
             .allocator = allocator,
@@ -21,7 +21,7 @@ pub const Compiler = struct {
     }
 
     pub fn compile(self: *@This(), path: []const u8) !void {
-        var tu = try TranslationUnit.init(self.allocator, self.arena_alloc, path);
+        var tu = try TranslationUnit.init(self.allocator, self.arena_alloc, path, self.stdout);
         try tu.frontend();
         try self.translation_units.put(path, tu);
     }

@@ -28,19 +28,29 @@ pub fn static_declaration(self: *Parser) ParserError!*StmtNode { //
         return function(self);
     }
 
-    return ParserError.UnexpectedToken;
+    self.has_error = true;
+    return ParserError.UnexpectedStaticDeclarationToken;
 }
 
 pub fn declaration(self: *Parser) ParserError!Stmt {
     const start = self.peek();
     const dec: *const StmtNode = dec_res: {
         if (self.match(TokenType.Let)) |_| {
-            break :dec_res try let(self);
+            break :dec_res let(self);
         } else if (self.match(TokenType.Func)) |_| {
-            break :dec_res try function(self);
+            break :dec_res function(self);
         }
 
-        return Statemet.statement(self);
+        return Statemet.statement(self) catch {
+            self.has_error = true;
+            self.synchronize();
+            break :dec_res AST.create_none_stmt(self.allocator) catch return ParserError.BadAllocation;
+        };
+    } catch |err| dec_res: {
+        self.has_error = true;
+        try self.report(err);
+        self.synchronize();
+        break :dec_res AST.create_none_stmt(self.allocator) catch return ParserError.BadAllocation;
     };
 
     const end = self.previous();
